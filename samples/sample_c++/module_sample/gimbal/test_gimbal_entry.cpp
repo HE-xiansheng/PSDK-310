@@ -467,6 +467,7 @@ start:
         break;
     }
     case '7':
+    {
         // T_DjiAircraftInfoBaseInfo baseInfo;
         T_DjiFcSubscriptionThreeGimbalData threeGimbalData = {0}; // 云台数据结构体
         T_DjiDataTimestamp timestamp = {0};                       // 时间戳
@@ -517,7 +518,9 @@ start:
                           threeGimbalData.anglesData[gimbalMountPosition - 1].yaw); // 获取云台数据
         }
         break;
+    }
     case '8':
+    {
         uint32_t gimbalMode;
         uint32_t rotateMode;
         dji_f32_t pitch, roll, yaw;
@@ -577,7 +580,7 @@ start:
         osalHandler->TaskSleepMs(2000);
 
         break;
-
+    }
     case 'q':
         break;
     default:
