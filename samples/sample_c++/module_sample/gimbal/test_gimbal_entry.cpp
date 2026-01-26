@@ -39,7 +39,8 @@
 /* Private constants ---------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
-typedef enum {
+typedef enum
+{
     E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_ROTATE_GIMBAL_ON_FREE_MODE,
     E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_ROTATE_GIMBAL_ON_YAW_FOLLOW_MODE,
     E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_SET_PITCH_RANGE_EXTENSION_MODE,
@@ -48,26 +49,32 @@ typedef enum {
     E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_RESET_GIMBAL_SETTINGS,
     E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_ROTATE_GIMBAL_BY_KEYBOARD,
     E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_QUIT,
+    E_DJI_TEST_GIMBAL_MESSAGE,
+    E_DJI_TEST_GIMBAL_CONTROL
 } E_DjiTestGimbalManagerSampleSelect;
 
 /* Private values -------------------------------------------------------------*/
 static const char *s_gimbalManagerSampleList[] = {
     [E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_ROTATE_GIMBAL_ON_FREE_MODE] =
-    "| [0] Gimbal manager sample - Rotate gimbal on free mode                                           |",
+        "| [0] Gimbal manager sample - Rotate gimbal on free mode                                           |",
     [E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_ROTATE_GIMBAL_ON_YAW_FOLLOW_MODE] =
-    "| [1] Gimbal manager sample - Rotate gimbal on yaw follow mode                                     |",
+        "| [1] Gimbal manager sample - Rotate gimbal on yaw follow mode                                     |",
     [E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_SET_PITCH_RANGE_EXTENSION_MODE] =
-    "| [2] Gimbal manager sample - Set pitch range extension mode                                       |",
+        "| [2] Gimbal manager sample - Set pitch range extension mode                                       |",
     [E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_SET_CONTROLLER_MAX_SPEED_PERCENTAGE] =
-    "| [3] Gimbal manager sample - Set controller max speed percentage                                  |",
+        "| [3] Gimbal manager sample - Set controller max speed percentage                                  |",
     [E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_SET_CONTROLLER_SMOOTH_FACTOR] =
-    "| [4] Gimbal manager sample - Set controller smooth factor                                         |",
+        "| [4] Gimbal manager sample - Set controller smooth factor                                         |",
     [E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_RESET_GIMBAL_SETTINGS] =
-    "| [5] Gimbal manager sample - Reset gimbal settings                                                |",
+        "| [5] Gimbal manager sample - Reset gimbal settings                                                |",
     [E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_ROTATE_GIMBAL_BY_KEYBOARD] =
-    "| [6] Gimbal manager sample - Rotate gimbal by keyboard input and read back value                  |",
+        "| [6] Gimbal manager sample - Rotate gimbal by keyboard input and read back value                  |",
+    [E_DJI_TEST_GIMBAL_MESSAGE] =
+        "| [7] E_DJI_TEST_GIMBAL_MESSAGE                                                                    |",
+    [E_DJI_TEST_GIMBAL_CONTROL] =
+        "| [8] E_DJI_TEST_GIMBAL_CONTROL                                                                    |",
     [E_DJI_TEST_GIMBAL_MANAGER_SAMPLE_SELECT_QUIT] =
-    "| [q] Gimbal manager sample - Quit                                                                 |",
+        "| [q] Gimbal manager sample - Quit                                                                 |",
 };
 
 /* Private functions declaration ---------------------------------------------*/
@@ -86,31 +93,28 @@ start:
     osalHandler->TaskSleepMs(100);
     std::cout
         << "| Available position:                                                                              |"
-        <<
-        std::endl;
+        << std::endl;
     std::cout
         << "| [1] Select gimbal mount position at NO.1 payload port                                            |"
-        <<
-        std::endl;
+        << std::endl;
     std::cout
         << "| [2] Select gimbal mount position at NO.2 payload port                                            |"
-        <<
-        std::endl;
+        << std::endl;
     std::cout
         << "| [3] Select gimbal mount position at NO.3 payload port                                            |"
-        <<
-        std::endl;
+        << std::endl;
     std::cout
         << "| [q] Quit                                                                                         |"
-        <<
-        std::endl;
+        << std::endl;
 
     std::cin >> mountPosition;
-    if (mountPosition == 'q') {
+    if (mountPosition == 'q')
+    {
         return;
     }
 
-    if (mountPosition > '3' || mountPosition < '1') {
+    if (mountPosition > '3' || mountPosition < '1')
+    {
         USER_LOG_ERROR("Input mount position is invalid");
         goto start;
     }
@@ -119,321 +123,472 @@ start:
     osalHandler->TaskSleepMs(100);
     std::cout
         << "| Available commands:                                                                              |"
-        <<
-        std::endl;
+        << std::endl;
     DjiTest_GimbalManagerShowSampleSelectList(s_gimbalManagerSampleList, UTIL_ARRAY_SIZE(s_gimbalManagerSampleList));
 
     std::cin >> inputTestCase;
-    switch (inputTestCase) {
-        case '0':
-            DjiTest_GimbalManagerRunSample(gimbalMountPosition, DJI_GIMBAL_MODE_FREE);
-            goto start;
-        case '1':
-            DjiTest_GimbalManagerRunSample(gimbalMountPosition, DJI_GIMBAL_MODE_YAW_FOLLOW);
-            goto start;
-        case '2': {
-            int32_t enableFlag;
+    switch (inputTestCase)
+    {
+    case '0':
+        DjiTest_GimbalManagerRunSample(gimbalMountPosition, DJI_GIMBAL_MODE_FREE);
+        goto start;
+    case '1':
+        DjiTest_GimbalManagerRunSample(gimbalMountPosition, DJI_GIMBAL_MODE_YAW_FOLLOW);
+        goto start;
+    case '2':
+    {
+        int32_t enableFlag;
 
-            osalHandler->TaskSleepMs(10);
-            printf("Input enable flag: ");
-            scanf("%d", &enableFlag);
+        osalHandler->TaskSleepMs(10);
+        printf("Input enable flag: ");
+        scanf("%d", &enableFlag);
 
-            returnCode = DjiGimbalManager_Init();
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
-                return;
-            }
-
-            returnCode = DjiGimbalManager_SetPitchRangeExtensionEnabled(gimbalMountPosition, (bool)enableFlag);
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Failed!");
-            }
-
-            USER_LOG_INFO("Set gimbal's pitch range extension mode as %d successfully!", enableFlag);
-
-            goto start;
-            break;
+        returnCode = DjiGimbalManager_Init();
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
+            return;
         }
-        case '3': {
-            int32_t percentage;
 
-            osalHandler->TaskSleepMs(10);
-            printf("Input max speed percentage of yaw axis: ");
-            scanf("%d", &percentage);
-
-            returnCode = DjiGimbalManager_Init();
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
-                return;
-            }
-
-            returnCode = DjiGimbalManager_SetControllerMaxSpeedPercentage(gimbalMountPosition, DJI_GIMBAL_AXIS_YAW, (uint8_t)percentage);
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Failed!");
-            }
-
-            USER_LOG_INFO("Set yaw axis's max speed percentage to %d successfully!", percentage);
-
-            osalHandler->TaskSleepMs(10);
-            printf("Input max speed percentage of pitch axis: ");
-            scanf("%d", &percentage);
-
-            returnCode = DjiGimbalManager_SetControllerMaxSpeedPercentage(gimbalMountPosition, DJI_GIMBAL_AXIS_PITCH, (uint8_t)percentage);
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Failed!");
-            }
-
-            USER_LOG_INFO("Set pitch axis's max speed percentage to %d successfully!", percentage);
-
-            goto start;
-            break;
+        returnCode = DjiGimbalManager_SetPitchRangeExtensionEnabled(gimbalMountPosition, (bool)enableFlag);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Failed!");
         }
-        case '4': {
-            int32_t factor;
 
-            osalHandler->TaskSleepMs(10);
-            printf("Input yaw axis's smooth factor: ");
-            scanf("%d", &factor);
+        USER_LOG_INFO("Set gimbal's pitch range extension mode as %d successfully!", enableFlag);
 
-            returnCode = DjiGimbalManager_Init();
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
-                return;
-            }
+        goto start;
+        break;
+    }
+    case '3':
+    {
+        int32_t percentage;
 
-            returnCode = DjiGimbalManager_SetControllerSmoothFactor(gimbalMountPosition, DJI_GIMBAL_AXIS_YAW, (uint8_t)factor);
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Failed!");
-            }
+        osalHandler->TaskSleepMs(10);
+        printf("Input max speed percentage of yaw axis: ");
+        scanf("%d", &percentage);
 
-            USER_LOG_INFO("Set yaw axis smooth factor to %d successfully!", factor);
-
-            osalHandler->TaskSleepMs(10);
-            printf("Input pitch axis's smooth factor: ");
-            scanf("%d", &factor);
-
-            returnCode = DjiGimbalManager_SetControllerSmoothFactor(gimbalMountPosition, DJI_GIMBAL_AXIS_PITCH, (uint8_t)factor);
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Failed!");
-            }
-
-            USER_LOG_INFO("Set pitch axis smooth factor to %d successfully!", factor);
-
-            goto start;
-            break;
+        returnCode = DjiGimbalManager_Init();
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
+            return;
         }
-        case '5': {
 
-            returnCode = DjiGimbalManager_Init();
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
-                return;
-            }
-
-            returnCode = DjiGimbalManager_RestoreFactorySettings(gimbalMountPosition);
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Failed!");
-            }
-
-            USER_LOG_INFO("Reset gimbal factory settings successfully!");
-
-            goto start;
-            break;
+        returnCode = DjiGimbalManager_SetControllerMaxSpeedPercentage(gimbalMountPosition, DJI_GIMBAL_AXIS_YAW, (uint8_t)percentage);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Failed!");
         }
-        case '6': {
-            uint32_t gimbalMode;
-            uint32_t rotateMode;
-            dji_f32_t pitch, roll, yaw;
-            T_DjiGimbalManagerRotation rotation;
-            T_DjiAircraftInfoBaseInfo baseInfo;
-            E_DjiAircraftSeries aircraftSeries;
 
-            returnCode = DjiGimbalManager_Init();
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
-                return;
-            }
+        USER_LOG_INFO("Set yaw axis's max speed percentage to %d successfully!", percentage);
 
-            returnCode = DjiAircraftInfo_GetBaseInfo(&baseInfo);
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("Failed to get aircraft base info, return code 0x%08X", returnCode);
+        osalHandler->TaskSleepMs(10);
+        printf("Input max speed percentage of pitch axis: ");
+        scanf("%d", &percentage);
+
+        returnCode = DjiGimbalManager_SetControllerMaxSpeedPercentage(gimbalMountPosition, DJI_GIMBAL_AXIS_PITCH, (uint8_t)percentage);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Failed!");
+        }
+
+        USER_LOG_INFO("Set pitch axis's max speed percentage to %d successfully!", percentage);
+
+        goto start;
+        break;
+    }
+    case '4':
+    {
+        int32_t factor;
+
+        osalHandler->TaskSleepMs(10);
+        printf("Input yaw axis's smooth factor: ");
+        scanf("%d", &factor);
+
+        returnCode = DjiGimbalManager_Init();
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
+            return;
+        }
+
+        returnCode = DjiGimbalManager_SetControllerSmoothFactor(gimbalMountPosition, DJI_GIMBAL_AXIS_YAW, (uint8_t)factor);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Failed!");
+        }
+
+        USER_LOG_INFO("Set yaw axis smooth factor to %d successfully!", factor);
+
+        osalHandler->TaskSleepMs(10);
+        printf("Input pitch axis's smooth factor: ");
+        scanf("%d", &factor);
+
+        returnCode = DjiGimbalManager_SetControllerSmoothFactor(gimbalMountPosition, DJI_GIMBAL_AXIS_PITCH, (uint8_t)factor);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Failed!");
+        }
+
+        USER_LOG_INFO("Set pitch axis smooth factor to %d successfully!", factor);
+
+        goto start;
+        break;
+    }
+    case '5':
+    {
+
+        returnCode = DjiGimbalManager_Init();
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
+            return;
+        }
+
+        returnCode = DjiGimbalManager_RestoreFactorySettings(gimbalMountPosition);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Failed!");
+        }
+
+        USER_LOG_INFO("Reset gimbal factory settings successfully!");
+
+        goto start;
+        break;
+    }
+    case '6':
+    {
+        uint32_t gimbalMode;
+        uint32_t rotateMode;
+        dji_f32_t pitch, roll, yaw;
+        T_DjiGimbalManagerRotation rotation;
+        T_DjiAircraftInfoBaseInfo baseInfo;
+        E_DjiAircraftSeries aircraftSeries;
+
+        returnCode = DjiGimbalManager_Init();
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
+            return;
+        }
+
+        returnCode = DjiAircraftInfo_GetBaseInfo(&baseInfo);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Failed to get aircraft base info, return code 0x%08X", returnCode);
+            goto end;
+        }
+
+        aircraftSeries = baseInfo.aircraftSeries;
+
+        if (aircraftSeries == DJI_AIRCRAFT_SERIES_M300 || aircraftSeries == DJI_AIRCRAFT_SERIES_M350)
+        {
+            returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_IMU_ATTI_NAVI_DATA_WITH_TIMESTAMP, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d",
+                               DJI_FC_SUBSCRIPTION_TOPIC_IMU_ATTI_NAVI_DATA_WITH_TIMESTAMP, returnCode);
                 goto end;
             }
 
-            aircraftSeries = baseInfo.aircraftSeries;
+            returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_QUATERNION, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d", DJI_FC_SUBSCRIPTION_TOPIC_QUATERNION, returnCode);
+                goto end;
+            }
+        }
 
-            if (aircraftSeries == DJI_AIRCRAFT_SERIES_M300 || aircraftSeries == DJI_AIRCRAFT_SERIES_M350) {
-                returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_IMU_ATTI_NAVI_DATA_WITH_TIMESTAMP, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
-                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                    USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d",
-                                   DJI_FC_SUBSCRIPTION_TOPIC_IMU_ATTI_NAVI_DATA_WITH_TIMESTAMP, returnCode);
+        if (aircraftSeries == DJI_AIRCRAFT_SERIES_M300 || aircraftSeries == DJI_AIRCRAFT_SERIES_M350)
+        {
+            returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d", DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA, returnCode);
+                goto end;
+            }
+            USER_LOG_INFO("Subscribe topic DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA succefully.");
+        }
+        else if (aircraftSeries == DJI_AIRCRAFT_SERIES_M30 || aircraftSeries == DJI_AIRCRAFT_SERIES_M3 ||
+                 aircraftSeries == DJI_AIRCRAFT_SERIES_M3D)
+        {
+            returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_GIMBAL_ANGLES, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d", DJI_FC_SUBSCRIPTION_TOPIC_GIMBAL_ANGLES, returnCode);
+                goto end;
+            }
+            USER_LOG_INFO("Subscribe topic DJI_FC_SUBSCRIPTION_TOPIC_GIMBAL_ANGLES succefully.");
+        } // 根据不同机型订阅不同消息类型
+
+        while (1)
+        {
+            T_DjiFcSubscriptionQuaternion quat;
+            T_DjiFcSubscriptionThreeGimbalData threeGimbalData = {0};
+            T_DjiFcSubscriptionGimbalAngles gimbalAngles = {0};
+            T_DjiDataTimestamp timestamp = {0};
+            dji_f32_t nPitch, nRoll, nYaw;
+            dji_f32_t qPitch, qRoll, qYaw;
+            dji_f32_t yawOffset = 0;
+            T_DjiFcSubscriptionImuAttiNaviDataWithTimestamp naviData = {0};
+
+            osalHandler->TaskSleepMs(5);
+            printf("gimbal mode: 0: free, 1: fpv, 2: yaw-follow, 3: exit sample\n");
+            printf("rotate mode: 0: rel, 1: abs\n");
+            printf("Input gimbal mode, rotate mode, p, r, y(range in 0 ~ 360 deg if in abs mode): ");
+
+            scanf("%d", &gimbalMode);
+            if (gimbalMode == 3)
+            {
+                break;
+            }
+
+            scanf("%d %f %f %f", &rotateMode, &pitch, &roll, &yaw);
+
+            printf("gimbale mode %d, rotate mode %d, p %f, r %f, y %f\n",
+                   gimbalMode, rotateMode, pitch, roll, yaw);
+
+            returnCode = DjiGimbalManager_SetMode(gimbalMountPosition, (E_DjiGimbalMode)gimbalMode);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("DjiGimbalManager_SetMode return 0x%08X", returnCode);
+                goto end;
+            }
+
+            rotation.rotationMode = (E_DjiGimbalRotationMode)rotateMode;
+            rotation.pitch = pitch;
+            rotation.roll = roll;
+            rotation.yaw = yaw;
+            rotation.time = 0.5;
+
+            if (aircraftSeries == DJI_AIRCRAFT_SERIES_M300 || aircraftSeries == DJI_AIRCRAFT_SERIES_M350)
+            {
+                osalHandler->TaskSleepMs(20);
+                returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_IMU_ATTI_NAVI_DATA_WITH_TIMESTAMP,
+                                                                     (uint8_t *)&naviData,
+                                                                     sizeof(T_DjiFcSubscriptionImuAttiNaviDataWithTimestamp),
+                                                                     &timestamp);
+                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+                {
+                    USER_LOG_ERROR("returnCode = 0x%08X", returnCode);
+                }
+
+                nYaw = (dji_f64_t)atan2f(2 * naviData.q[1] * naviData.q[2] + 2 * naviData.q[0] * naviData.q[3],
+                                         -2 * naviData.q[2] * naviData.q[2] - 2 * naviData.q[3] * naviData.q[3] + 1) *
+                       57.3;
+
+                returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_QUATERNION,
+                                                                     (uint8_t *)&quat,
+                                                                     sizeof(T_DjiFcSubscriptionQuaternion),
+                                                                     &timestamp);
+                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+                {
+                    USER_LOG_ERROR("DjiFcSubscription_GetLatestValueOfTopic return %x%08X", returnCode);
                     goto end;
                 }
 
-                returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_QUATERNION, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
-                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                    USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d", DJI_FC_SUBSCRIPTION_TOPIC_QUATERNION, returnCode);
-                    goto end;
+                qYaw = (dji_f64_t)atan2f(2 * quat.q1 * quat.q2 + 2 * quat.q0 * quat.q3,
+                                         -2 * quat.q2 * quat.q2 - 2 * quat.q3 * quat.q3 + 1) *
+                       57.3;
+
+                yawOffset = nYaw - qYaw;
+
+                if (rotation.rotationMode == DJI_GIMBAL_ROTATION_MODE_ABSOLUTE_ANGLE)
+                {
+                    rotation.yaw += yawOffset;
                 }
             }
 
+            returnCode = DjiGimbalManager_Rotate(gimbalMountPosition, rotation);
+            if (returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_PITCH_REACH_POSITIVE_LIMIT ||
+                returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_PITCH_REACH_NEGATIVE_LIMIT ||
+                returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_ROLL_REACH_POSITIVE_LIMIT ||
+                returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_ROLL_REACH_NEGATIVE_LIMIT ||
+                returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_YAW_REACH_POSITIVE_LIMIT ||
+                returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_YAW_REACH_NEGATIVE_LIMIT)
+            {
+                USER_LOG_WARN("Reach limitation!");
+            }
+            else if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("DjiGimbalManager_Rotate return %x%08X", returnCode);
+                goto end;
+            }
 
-            if (aircraftSeries == DJI_AIRCRAFT_SERIES_M300 || aircraftSeries == DJI_AIRCRAFT_SERIES_M350) {
-                returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
-                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                    USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d", DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA, returnCode);
+            osalHandler->TaskSleepMs(2000);
+
+            if (aircraftSeries == DJI_AIRCRAFT_SERIES_M300 || aircraftSeries == DJI_AIRCRAFT_SERIES_M350)
+            {
+                returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA,
+                                                                     (uint8_t *)&threeGimbalData,
+                                                                     sizeof(T_DjiFcSubscriptionThreeGimbalData),
+                                                                     &timestamp);
+                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+                {
+                    USER_LOG_ERROR("DjiFcSubscription_GetLatestValueOfTopic return %x%08X", returnCode);
                     goto end;
                 }
-                USER_LOG_INFO("Subscribe topic DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA succefully.");
+
+                if (threeGimbalData.anglesData[0].yaw < 0)
+                {
+                    threeGimbalData.anglesData[0].yaw = 360 + threeGimbalData.anglesData[0].yaw;
+                }
+
+                USER_LOG_INFO("reab back gimbal's (p, r, y): p=%.4f r=%.4f y=%.4f",
+                              threeGimbalData.anglesData[gimbalMountPosition - 1].pitch,
+                              threeGimbalData.anglesData[gimbalMountPosition - 1].roll,
+                              threeGimbalData.anglesData[gimbalMountPosition - 1].yaw);
             }
             else if (aircraftSeries == DJI_AIRCRAFT_SERIES_M30 || aircraftSeries == DJI_AIRCRAFT_SERIES_M3 ||
-                     aircraftSeries == DJI_AIRCRAFT_SERIES_M3D) {
-                returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_GIMBAL_ANGLES, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
-                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                    USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d", DJI_FC_SUBSCRIPTION_TOPIC_GIMBAL_ANGLES, returnCode);
+                     aircraftSeries == DJI_AIRCRAFT_SERIES_M3D)
+            {
+                returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_GIMBAL_ANGLES,
+                                                                     (uint8_t *)&gimbalAngles,
+                                                                     sizeof(T_DjiFcSubscriptionGimbalAngles),
+                                                                     &timestamp);
+                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+                {
+                    USER_LOG_ERROR("DjiFcSubscription_GetLatestValueOfTopic return %x%08X", returnCode);
                     goto end;
                 }
-                USER_LOG_INFO("Subscribe topic DJI_FC_SUBSCRIPTION_TOPIC_GIMBAL_ANGLES succefully.");
+
+                if (gimbalAngles.z < 0)
+                {
+                    gimbalAngles.z = 360 + gimbalAngles.z;
+                }
+
+                USER_LOG_INFO("read back gimbal's (p, r, y): p=%.4f r=%.4f y=%.4f",
+                              gimbalAngles.x, gimbalAngles.y, gimbalAngles.z);
+            }
+        }
+
+        break;
+    }
+    case '7':
+        // T_DjiAircraftInfoBaseInfo baseInfo;
+        T_DjiFcSubscriptionThreeGimbalData threeGimbalData = {0}; // 云台数据结构体
+        T_DjiDataTimestamp timestamp = {0};                       // 时间戳
+        int gimbalIndex = gimbalMountPosition - 1;
+
+        returnCode = DjiGimbalManager_Init();
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
+            return;
+        } // 初始化
+
+        // returnCode = DjiAircraftInfo_GetBaseInfo(&baseInfo);
+        // if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        // {
+        //     USER_LOG_ERROR("Failed to get aircraft base info, return code 0x%08X", returnCode);
+        //     goto end;
+        // }
+
+        returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("DjiFcSubscription_SubscribeTopic %d return %d", DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA, returnCode);
+            goto end;
+        }
+        USER_LOG_INFO("Subscribe topic DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA succefully."); // 订阅云台数据
+
+        while (true)
+        {
+            returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA,
+                                                                 (uint8_t *)&threeGimbalData,
+                                                                 sizeof(T_DjiFcSubscriptionThreeGimbalData),
+                                                                 &timestamp);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("DjiFcSubscription_GetLatestValueOfTopic return %x%08X", returnCode);
+                goto end;
             }
 
-
-            while (1) {
-                T_DjiFcSubscriptionQuaternion quat;
-                T_DjiFcSubscriptionThreeGimbalData threeGimbalData = {0};
-                T_DjiFcSubscriptionGimbalAngles gimbalAngles = {0};
-                T_DjiDataTimestamp timestamp = {0};
-                dji_f32_t nPitch, nRoll, nYaw;
-                dji_f32_t qPitch, qRoll, qYaw;
-                dji_f32_t yawOffset = 0;
-                T_DjiFcSubscriptionImuAttiNaviDataWithTimestamp naviData = {0};
-
-                osalHandler->TaskSleepMs(5);
-                printf("gimbal mode: 0: free, 1: fpv, 2: yaw-follow, 3: exit sample\n");
-                printf("rotate mode: 0: rel, 1: abs\n");
-                printf("Input gimbal mode, rotate mode, p, r, y(range in 0 ~ 360 deg if in abs mode): ");
-
-                scanf("%d", &gimbalMode);
-                if (gimbalMode == 3) {
-                    break;
-                }
-
-                scanf("%d %f %f %f", &rotateMode, &pitch, &roll, &yaw);
-
-                printf("gimbale mode %d, rotate mode %d, p %f, r %f, y %f\n",
-                       gimbalMode, rotateMode, pitch, roll, yaw);
-
-                returnCode = DjiGimbalManager_SetMode(gimbalMountPosition, (E_DjiGimbalMode)gimbalMode);
-                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                    USER_LOG_ERROR("DjiGimbalManager_SetMode return 0x%08X", returnCode);
-                    goto end;
-                }
-
-                rotation.rotationMode = (E_DjiGimbalRotationMode)rotateMode;
-                rotation.pitch = pitch;
-                rotation.roll = roll;
-                rotation.yaw = yaw;
-                rotation.time = 0.5;
-
-                if (aircraftSeries == DJI_AIRCRAFT_SERIES_M300 || aircraftSeries == DJI_AIRCRAFT_SERIES_M350) {
-                    osalHandler->TaskSleepMs(20);
-                    returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_IMU_ATTI_NAVI_DATA_WITH_TIMESTAMP,
-                                                                        (uint8_t *) &naviData,
-                                                                        sizeof(T_DjiFcSubscriptionImuAttiNaviDataWithTimestamp),
-                                                                        &timestamp);
-                    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                        USER_LOG_ERROR("returnCode = 0x%08X", returnCode);
-                    }
-
-                    nYaw = (dji_f64_t) atan2f(2 * naviData.q[1] * naviData.q[2] + 2 * naviData.q[0] * naviData.q[3],
-                                            -2 * naviData.q[2] * naviData.q[2] - 2 * naviData.q[3] * naviData.q[3] + 1) * 57.3;
-
-                    returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_QUATERNION,
-                                                                        (uint8_t *) &quat,
-                                                                        sizeof(T_DjiFcSubscriptionQuaternion),
-                                                                        &timestamp);
-                    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                        USER_LOG_ERROR("DjiFcSubscription_GetLatestValueOfTopic return %x%08X", returnCode);
-                        goto end;
-                    }
-
-                    qYaw = (dji_f64_t) atan2f(2 * quat.q1 * quat.q2 + 2 * quat.q0 * quat.q3,
-                                            -2 * quat.q2 * quat.q2 - 2 * quat.q3 * quat.q3 + 1) * 57.3;
-
-
-                    yawOffset = nYaw - qYaw;
-
-                    if (rotation.rotationMode == DJI_GIMBAL_ROTATION_MODE_ABSOLUTE_ANGLE) {
-                        rotation.yaw += yawOffset;
-                    }
-                }
-
-                returnCode = DjiGimbalManager_Rotate(gimbalMountPosition, rotation);
-                if (returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_PITCH_REACH_POSITIVE_LIMIT ||
-                    returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_PITCH_REACH_NEGATIVE_LIMIT ||
-                    returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_ROLL_REACH_POSITIVE_LIMIT ||
-                    returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_ROLL_REACH_NEGATIVE_LIMIT ||
-                    returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_YAW_REACH_POSITIVE_LIMIT ||
-                    returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_YAW_REACH_NEGATIVE_LIMIT) {
-                    USER_LOG_WARN("Reach limitation!");
-                }
-                else if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                    USER_LOG_ERROR("DjiGimbalManager_Rotate return %x%08X", returnCode);
-                    goto end;
-                }
-
-                osalHandler->TaskSleepMs(2000);
-
-                if (aircraftSeries == DJI_AIRCRAFT_SERIES_M300 || aircraftSeries == DJI_AIRCRAFT_SERIES_M350) {
-                    returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA,
-                                                                        (uint8_t *) &threeGimbalData,
-                                                                        sizeof(T_DjiFcSubscriptionThreeGimbalData),
-                                                                        &timestamp);
-                    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                        USER_LOG_ERROR("DjiFcSubscription_GetLatestValueOfTopic return %x%08X", returnCode);
-                        goto end;
-                    }
-
-                    if (threeGimbalData.anglesData[0].yaw < 0) {
-                        threeGimbalData.anglesData[0].yaw = 360 + threeGimbalData.anglesData[0].yaw;
-                    }
-
-                    USER_LOG_INFO("reab back gimbal's (p, r, y): p=%.4f r=%.4f y=%.4f",
-                                  threeGimbalData.anglesData[gimbalMountPosition - 1].pitch,
-                                  threeGimbalData.anglesData[gimbalMountPosition - 1].roll,
-                                  threeGimbalData.anglesData[gimbalMountPosition - 1].yaw);
-                }
-                else if (aircraftSeries == DJI_AIRCRAFT_SERIES_M30 || aircraftSeries == DJI_AIRCRAFT_SERIES_M3 ||
-                         aircraftSeries == DJI_AIRCRAFT_SERIES_M3D) {
-                    returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_GIMBAL_ANGLES,
-                                                                        (uint8_t *) &gimbalAngles,
-                                                                        sizeof(T_DjiFcSubscriptionGimbalAngles),
-                                                                        &timestamp);
-                    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                        USER_LOG_ERROR("DjiFcSubscription_GetLatestValueOfTopic return %x%08X", returnCode);
-                        goto end;
-                    }
-
-                    if (gimbalAngles.z < 0) {
-                        gimbalAngles.z = 360 + gimbalAngles.z;
-                    }
-
-                    USER_LOG_INFO("read back gimbal's (p, r, y): p=%.4f r=%.4f y=%.4f",
-                                  gimbalAngles.x, gimbalAngles.y, gimbalAngles.z);
-                }
+            if (threeGimbalData.anglesData[gimbalIndex].yaw < 0)
+            {
+                threeGimbalData.anglesData[gimbalIndex].yaw = 360 + threeGimbalData.anglesData[gimbalIndex].yaw;
             }
 
+            USER_LOG_INFO("reab back gimbal's (p, r, y): p=%.4f r=%.4f y=%.4f",
+                          threeGimbalData.anglesData[gimbalMountPosition - 1].pitch,
+                          threeGimbalData.anglesData[gimbalMountPosition - 1].roll,
+                          threeGimbalData.anglesData[gimbalMountPosition - 1].yaw); // 获取云台数据
+        }
+        break;
+    case '8':
+        uint32_t gimbalMode;
+        uint32_t rotateMode;
+        dji_f32_t pitch, roll, yaw;
+        T_DjiGimbalManagerRotation rotation; // 旋转赋值结构体
+        returnCode = DjiGimbalManager_Init();
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
+            return;
+        } // 初始化
+
+        osalHandler->TaskSleepMs(5);
+        printf("gimbal mode: 0: free, 1: fpv, 2: yaw-follow, 3: exit sample\n");
+        printf("rotate mode: 0: rel, 1: abs\n");
+        printf("Input gimbal mode, rotate mode, p, r, y(range in 0 ~ 360 deg if in abs mode): ");
+
+        scanf("%d", &gimbalMode);
+        if (gimbalMode == 3)
+        {
             break;
         }
-        case 'q':
-            break;
-        default:
-            USER_LOG_ERROR("Input command is invalid");
-            goto start;
+        scanf("%d %f %f %f", &rotateMode, &pitch, &roll, &yaw);
+
+        printf("gimbale mode %d, rotate mode %d, p %f, r %f, y %f\n",
+               gimbalMode, rotateMode, pitch, roll, yaw);
+        // 键盘输入
+
+        returnCode = DjiGimbalManager_SetMode(gimbalMountPosition, (E_DjiGimbalMode)gimbalMode);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("DjiGimbalManager_SetMode return 0x%08X", returnCode);
+            goto end;
+        } // 设置工作模式
+
+        rotation.rotationMode = (E_DjiGimbalRotationMode)rotateMode;
+        rotation.pitch = pitch;
+        rotation.roll = roll;
+        rotation.yaw = yaw;
+        rotation.time = 0.5;
+
+        returnCode = DjiGimbalManager_Rotate(gimbalMountPosition, rotation);
+        if (returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_PITCH_REACH_POSITIVE_LIMIT ||
+            returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_PITCH_REACH_NEGATIVE_LIMIT ||
+            returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_ROLL_REACH_POSITIVE_LIMIT ||
+            returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_ROLL_REACH_NEGATIVE_LIMIT ||
+            returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_YAW_REACH_POSITIVE_LIMIT ||
+            returnCode == DJI_ERROR_GIMBAL_MODULE_CODE_YAW_REACH_NEGATIVE_LIMIT)
+        {
+            USER_LOG_WARN("Reach limitation!");
+        }
+        else if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("DjiGimbalManager_Rotate return %x%08X", returnCode);
+            goto end;
+        } // 云台旋转控制
+
+        osalHandler->TaskSleepMs(2000);
+
+        break;
+
+    case 'q':
+        break;
+    default:
+        USER_LOG_ERROR("Input command is invalid");
+        goto start;
     }
 
 end:
     returnCode = DjiGimbalManager_Deinit();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Deinit gimbal manager error, return code 0x%08X", returnCode);
         return;
     }
@@ -443,10 +598,12 @@ end:
     return;
 }
 /* Private functions definition-----------------------------------------------*/
-void DjiTest_GimbalManagerShowSampleSelectList(const char **SampleList, uint8_t size) {
+void DjiTest_GimbalManagerShowSampleSelectList(const char **SampleList, uint8_t size)
+{
     uint8_t i = 0;
 
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < size; i++)
+    {
         std::cout << SampleList[i] << std::endl;
     }
 }
