@@ -469,7 +469,6 @@ start:
     }
     case '7':
     {
-        // T_DjiAircraftInfoBaseInfo baseInfo;
         T_DjiFcSubscriptionThreeGimbalData threeGimbalData = {0}; // 云台数据结构体
         T_DjiDataTimestamp timestamp = {0};                       // 时间戳
         int gimbalIndex = gimbalMountPosition - 1;
@@ -480,13 +479,6 @@ start:
             USER_LOG_ERROR("Init gimbal manager error, return code 0x%08X", returnCode);
             return;
         } // 初始化
-
-        // returnCode = DjiAircraftInfo_GetBaseInfo(&baseInfo);
-        // if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-        // {
-        //     USER_LOG_ERROR("Failed to get aircraft base info, return code 0x%08X", returnCode);
-        //     goto end;
-        // }
 
         returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_THREE_GIMBAL_DATA, DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
         if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
