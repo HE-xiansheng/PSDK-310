@@ -135,7 +135,17 @@ T_DjiReturnCode User_CameraRunSample(void)
             goto exitCameraModule;
         }
 
+        // 设置曝光模式
+        USER_LOG_INFO("Setting exposure mode to manual...");
+        returnCode = DjiTest_CameraManagerSetExposureMode(mountPosition, DJI_CAMERA_MANAGER_EXPOSURE_MODE_EXPOSURE_MANUAL);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Set exposure mode failed, error code: 0x%08X", returnCode);
+            goto exitCameraModule;
+        }
+
         // 获取ISO参数
+        USER_LOG_INFO("Getting current ISO value...");
         returnCode = DjiCameraManager_GetISO(mountPosition, &isoDataTemp);
         if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
             returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
@@ -144,22 +154,28 @@ T_DjiReturnCode User_CameraRunSample(void)
                            mountPosition, returnCode);
             goto exitCameraModule;
         }
+        USER_LOG_INFO("Current ISO: %d, Target ISO: %d", isoDataTemp, isoData);
+
         // 参数判断
         if (isoDataTemp == isoData)
         {
             USER_LOG_INFO("The mounted position %d camera's iso is already what you expected.",
                           mountPosition);
-            return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
         }
-        // 设置ISO参数
-        returnCode = DjiCameraManager_SetISO(mountPosition, isoDataTemp);
-        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
-            returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
+        else
         {
-            USER_LOG_ERROR("Set mounted position %d camera's iso %d failed, "
-                           "error code: 0x%08X.",
-                           mountPosition, isoDataTemp, returnCode);
-            goto exitCameraModule;
+            // 设置ISO参数
+            USER_LOG_INFO("Setting ISO to %d...", isoData);
+            returnCode = DjiCameraManager_SetISO(mountPosition, isoData);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
+                returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
+            {
+                USER_LOG_ERROR("Set mounted position %d camera's iso %d failed, "
+                               "error code: 0x%08X.",
+                               mountPosition, isoData, returnCode);
+                goto exitCameraModule;
+            }
+            USER_LOG_INFO("ISO set successfully to %d", isoData);
         }
         break;
     }
