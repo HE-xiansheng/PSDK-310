@@ -32,20 +32,19 @@
 #include "dji_fc_subscription.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/* Exported constants --------------------------------------------------------*/
+    /* Exported constants --------------------------------------------------------*/
 
+    /* Exported types ------------------------------------------------------------*/
 
-/* Exported types ------------------------------------------------------------*/
-
-
-/* Exported functions --------------------------------------------------------*/
-T_DjiReturnCode DjiTest_FcSubscriptionStartService(void);
-T_DjiReturnCode DjiTest_FcSubscriptionRunSample(void);
-T_DjiReturnCode DjiTest_FcSubscriptionDataShowTrigger(void);
-T_DjiReturnCode DjiTest_FcSubscriptionGetTotalSatelliteNumber(uint8_t *number);
+    /* Exported functions --------------------------------------------------------*/
+    T_DjiReturnCode DjiTest_FcSubscriptionStartService(void);
+    T_DjiReturnCode DjiTest_FcSubscriptionRunSample(void);
+    T_DjiReturnCode DjiTest_FcSubscriptionDataShowTrigger(void);
+    T_DjiReturnCode DjiTest_FcSubscriptionGetTotalSatelliteNumber(uint8_t *number);
 
 #ifdef __cplusplus
 }

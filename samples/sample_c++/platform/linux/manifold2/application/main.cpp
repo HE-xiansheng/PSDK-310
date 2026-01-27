@@ -42,6 +42,9 @@
 #include <hms_manager/hms_manager_entry.h>
 #include "camera_manager/test_camera_manager_entry.h"
 
+/* User include ---------------------------------------------------------*/
+#include "user_subscription.hpp"
+
 /* Private constants ---------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
@@ -71,42 +74,45 @@ start:
         << "| [d] Stereo vision view sample - display the stereo image                                         |\n"
         << "| [e] Run camera manager sample - you can test camera's functions interactively                    |\n"
         << "| [f] Start rtk positioning sample - you can receive rtk rtcm data when rtk signal is ok           |\n"
+        << "| [g] "
         << std::endl;
 
     std::cin >> inputChar;
-    switch (inputChar) {
-        case '0':
-            DjiTest_FcSubscriptionRunSample();
+    switch (inputChar)
+    {
+    case '0':
+        DjiTest_FcSubscriptionRunSample();
+        break;
+    case '1':
+        DjiUser_RunFlightControllerSample();
+        break;
+    case '2':
+        DjiUser_RunHmsManagerSample();
+        break;
+    case 'a':
+        DjiUser_RunGimbalManagerSample();
+        break;
+    case 'c':
+        DjiUser_RunCameraStreamViewSample();
+        break;
+    case 'd':
+        DjiUser_RunStereoVisionViewSample();
+        break;
+    case 'e':
+        DjiUser_RunCameraManagerSample();
+        break;
+    case 'f':
+        returnCode = DjiTest_PositioningStartService();
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("rtk positioning sample init error");
             break;
-        case '1':
-            DjiUser_RunFlightControllerSample();
-            break;
-        case '2':
-            DjiUser_RunHmsManagerSample();
-            break;
-        case 'a':
-            DjiUser_RunGimbalManagerSample();
-            break;
-        case 'c':
-            DjiUser_RunCameraStreamViewSample();
-            break;
-        case 'd':
-            DjiUser_RunStereoVisionViewSample();
-            break;
-        case 'e':
-            DjiUser_RunCameraManagerSample();
-            break;
-        case 'f':
-            returnCode = DjiTest_PositioningStartService();
-            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
-                USER_LOG_ERROR("rtk positioning sample init error");
-                break;
-            }
+        }
 
-            USER_LOG_INFO("Start rtk positioning sample successfully");
-            break;
-        default:
-            break;
+        USER_LOG_INFO("Start rtk positioning sample successfully");
+        break;
+    default:
+        break;
     }
 
     osalHandler->TaskSleepMs(2000);
