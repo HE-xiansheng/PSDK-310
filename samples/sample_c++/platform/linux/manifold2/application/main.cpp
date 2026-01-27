@@ -44,6 +44,7 @@
 
 /* User include ---------------------------------------------------------*/
 #include "User/user_subscription.h"
+#include "User/user_camera.h"
 
 /* Private constants ---------------------------------------------------------*/
 
@@ -75,6 +76,7 @@ start:
         << "| [e] Run camera manager sample - you can test camera's functions interactively                    |\n"
         << "| [f] Start rtk positioning sample - you can receive rtk rtcm data when rtk signal is ok           |\n"
         << "| [g] Star user subscribe sample                                                                   |\n"
+        << "| [h] Star user camera sample                                                                      |\n"
         << std::endl;
 
     std::cin >> inputChar;
@@ -113,6 +115,8 @@ start:
         break;
     case 'g':
         User_FcSubscriptionRunSample();
+    case 'h':
+        User_CameraRunSample();
     default:
         break;
     }

@@ -811,6 +811,7 @@ T_DjiReturnCode DjiTest_CameraManagerRunSample(E_DjiMountPosition mountPosition,
     T_DjiCameraManagerFocusPosData focusPosData;
     T_DjiCameraManagerTapZoomPosData tapZoomPosData;
 
+    //相机初始化
     USER_LOG_INFO("Camera manager sample start, cameraManagerSampleSelect %d", cameraManagerSampleSelect);
     DjiTest_WidgetLogAppend("Camera manager sample start");
 
@@ -822,6 +823,7 @@ T_DjiReturnCode DjiTest_CameraManagerRunSample(E_DjiMountPosition mountPosition,
         goto exitCameraModule;
     }
 
+    //获取相机类型和相机固件版本
     USER_LOG_INFO("--> Step 2: Get camera type and version");
     DjiTest_WidgetLogAppend("--> Step 2: Get camera type and version");
     returnCode = DjiCameraManager_GetCameraType(mountPosition, &cameraType);
@@ -843,7 +845,8 @@ T_DjiReturnCode DjiTest_CameraManagerRunSample(E_DjiMountPosition mountPosition,
     USER_LOG_INFO("Mounted position %d camera's firmware is V%02d.%02d.%02d.%02d\r\n", mountPosition,
                   firmwareVersion.firmware_version[0], firmwareVersion.firmware_version[1],
                   firmwareVersion.firmware_version[2], firmwareVersion.firmware_version[3]);
-
+    
+    //
     switch (cameraManagerSampleSelect) {
         case E_DJI_TEST_CAMERA_MANAGER_SAMPLE_SELECT_SET_CAMERA_SHUTTER_SPEED: {
             USER_LOG_INFO("--> Function a: Set camera shutter speed to 1/100 s");
