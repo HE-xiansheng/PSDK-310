@@ -1,6 +1,6 @@
 #include <utils/util_misc.h>
 #include <math.h>
-#include "test_fc_subscription.h"
+#include "dji_fc_subscription.h"
 #include "dji_logger.h"
 #include "dji_platform.h"
 #include "widget_interaction_test/test_widget_interaction.h"
