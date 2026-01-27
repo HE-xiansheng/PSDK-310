@@ -90,11 +90,10 @@ T_DjiReturnCode User_CameraRunSample(void)
     {
 
         E_DjiCameraManagerISO isoData;
-        USER_LOG_INFO("Available ISO values: ");
-        USER_LOG_INFO("0: AUTO, 1: ISO_100, 2: ISO_200, 3: ISO_400");
-        USER_LOG_INFO("4: ISO_800, 5: ISO_1600, 6: ISO_3200, 7: ISO_6400");
-        USER_LOG_INFO("8: ISO_12800, 9: ISO_25600");
-        USER_LOG_INFO("Please select ISO number: ");
+        USER_LOG_INFO("Available ISO values:");
+        USER_LOG_INFO("0: AUTO(0), 1: ISO_100(3), 2: ISO_200(4), 3: ISO_400(5)");
+        USER_LOG_INFO("4: ISO_800(6), 5: ISO_1600(7), 6: ISO_3200(8), 7: ISO_6400(9)");
+        USER_LOG_INFO("8: ISO_12800(10), 9: ISO_25600(11)");
         int isoInput;
         scanf("%d", &isoInput);
 
