@@ -43,7 +43,7 @@
 #include "camera_manager/test_camera_manager_entry.h"
 
 /* User include ---------------------------------------------------------*/
-#include "user_subscription.hpp"
+#include "User/user_subscription.hpp"
 
 /* Private constants ---------------------------------------------------------*/
 
