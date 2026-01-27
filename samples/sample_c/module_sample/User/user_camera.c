@@ -38,6 +38,40 @@ static const T_DjiTestCameraTypeStr s_cameraTypeStrList[] = {
     {DJI_CAMERA_TYPE_M4E, "M4E Camera"},
 };
 
+T_DjiReturnCode DjiTest_CameraManagerSetExposureMode(E_DjiMountPosition position,
+                                                     E_DjiCameraManagerExposureMode exposureMode)
+{
+    T_DjiReturnCode returnCode;
+    E_DjiCameraManagerExposureMode exposureModeTemp;
+
+    returnCode = DjiCameraManager_GetExposureMode(position, &exposureModeTemp);
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
+        returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
+    {
+        USER_LOG_ERROR("Get mounted position %d exposure mode failed, error code: 0x%08X",
+                       position, returnCode);
+        return returnCode;
+    }
+
+    if (exposureModeTemp == exposureMode)
+    {
+        USER_LOG_INFO("The mounted position %d camera's exposure mode is already what you expected.",
+                      position);
+        return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
+    }
+
+    returnCode = DjiCameraManager_SetExposureMode(position, exposureMode);
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
+        returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
+    {
+        USER_LOG_ERROR("Set mounted position %d camera's exposure mode %d failed, current exposure is %d,"
+                       " error code: 0x%08X",
+                       position, exposureMode, exposureModeTemp, returnCode);
+    }
+
+    return returnCode;
+}
+
 T_DjiReturnCode User_CameraRunSample(void)
 {
     T_DjiReturnCode returnCode;
@@ -180,14 +214,101 @@ T_DjiReturnCode User_CameraRunSample(void)
     }
     case 2:
     {
-        USER_LOG_INFO("Mounted position %d camera start to shoot photo", mountPosition);
-        returnCode = DjiCameraManager_StartShootPhoto(mountPosition, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
-        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        int shootCount = 0;
+        int shootMode = 0;
+        int shootInterval = 0; // 拍照间隔（毫秒）
+        int i;
+
+        USER_LOG_INFO("Please select shoot mode:");
+        USER_LOG_INFO("1: Single shoot (single photo)");
+        USER_LOG_INFO("2: Multi shoot (multiple photos with interval)");
+        USER_LOG_INFO("3: Continuous shoot (continuous mode)");
+        scanf("%d", &shootMode);
+
+        if (shootMode < 1 || shootMode > 3)
         {
-            USER_LOG_ERROR("Mounted position %d camera shoot photo failed, "
-                           "error code :0x%08X",
-                           mountPosition, returnCode);
+            USER_LOG_ERROR("Invalid shoot mode");
             goto exitCameraModule;
+        }
+        if (shootMode == 1)
+        {
+            // 单次拍照
+            USER_LOG_INFO("Mounted position %d camera start to shoot photo", mountPosition);
+            returnCode = DjiCameraManager_StartShootPhoto(mountPosition, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("Mounted position %d camera shoot photo failed, "
+                               "error code :0x%08X",
+                               mountPosition, returnCode);
+                goto exitCameraModule;
+            }
+            USER_LOG_INFO("Single photo taken successfully");
+        }
+        else if (shootMode == 2)
+        {
+            // 多次拍照（带间隔）
+            USER_LOG_INFO("Please enter shoot count (1-100):");
+            scanf("%d", &shootCount);
+            if (shootCount < 1 || shootCount > 100)
+            {
+                USER_LOG_ERROR("Invalid shoot count, please use 1-100");
+                goto exitCameraModule;
+            }
+
+            USER_LOG_INFO("Please enter shoot interval in milliseconds (100-5000):");
+            scanf("%d", &shootInterval);
+            if (shootInterval < 100 || shootInterval > 5000)
+            {
+                USER_LOG_ERROR("Invalid shoot interval, please use 100-5000ms");
+                goto exitCameraModule;
+            }
+
+            USER_LOG_INFO("Starting to shoot %d photos with %dms interval...", shootCount, shootInterval);
+
+            T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
+
+            for (i = 0; i < shootCount; i++)
+            {
+                USER_LOG_INFO("Shooting photo %d/%d...", i + 1, shootCount);
+                returnCode = DjiCameraManager_StartShootPhoto(mountPosition, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+                if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+                {
+                    USER_LOG_ERROR("Photo %d/%d failed, error code: 0x%08X", i + 1, shootCount, returnCode);
+                    break;
+                }
+                USER_LOG_INFO("Photo %d/%d taken successfully", i + 1, shootCount);
+
+                // 间隔等待
+                if (i < shootCount - 1)
+                {
+                    osalHandler->TaskSleepMs(shootInterval);
+                }
+            }
+
+            if (i == shootCount)
+            {
+                USER_LOG_INFO("All %d photos taken successfully", shootCount);
+            }
+        }
+        else if (shootMode == 3)
+        {
+            // 连拍模式
+            USER_LOG_INFO("Please enter shoot count for continuous mode (1-100):");
+            scanf("%d", &shootCount);
+            if (shootCount < 1 || shootCount > 100)
+            {
+                USER_LOG_ERROR("Invalid shoot count, please use 1-100");
+                goto exitCameraModule;
+            }
+
+            USER_LOG_INFO("Starting burst shoot mode for %d photos...", shootCount);
+            returnCode = DjiCameraManager_StartShootPhoto(mountPosition, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_BURST);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("Burst shoot failed, error code: 0x%08X", returnCode);
+                goto exitCameraModule;
+            }
+            USER_LOG_INFO("Burst shoot started successfully");
         }
         break;
     }
