@@ -6,6 +6,9 @@
 #include "dji_error.h"
 #include "dji_camera_manager.h"
 
+// 函数声明（在 test_camera_manager.c 中定义）
+T_DjiReturnCode DjiTest_CameraManagerSetExposureMode(E_DjiMountPosition position,
+                                                     E_DjiCameraManagerExposureMode exposureMode);
 static uint8_t DjiTest_CameraManagerGetCameraTypeIndex(E_DjiCameraType cameraType);
 typedef struct
 {
@@ -37,40 +40,6 @@ static const T_DjiTestCameraTypeStr s_cameraTypeStrList[] = {
     {DJI_CAMERA_TYPE_M4T, "M4T Camera"},
     {DJI_CAMERA_TYPE_M4E, "M4E Camera"},
 };
-
-T_DjiReturnCode DjiTest_CameraManagerSetExposureMode(E_DjiMountPosition position,
-                                                     E_DjiCameraManagerExposureMode exposureMode)
-{
-    T_DjiReturnCode returnCode;
-    E_DjiCameraManagerExposureMode exposureModeTemp;
-
-    returnCode = DjiCameraManager_GetExposureMode(position, &exposureModeTemp);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
-        returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
-    {
-        USER_LOG_ERROR("Get mounted position %d exposure mode failed, error code: 0x%08X",
-                       position, returnCode);
-        return returnCode;
-    }
-
-    if (exposureModeTemp == exposureMode)
-    {
-        USER_LOG_INFO("The mounted position %d camera's exposure mode is already what you expected.",
-                      position);
-        return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
-    }
-
-    returnCode = DjiCameraManager_SetExposureMode(position, exposureMode);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
-        returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
-    {
-        USER_LOG_ERROR("Set mounted position %d camera's exposure mode %d failed, current exposure is %d,"
-                       " error code: 0x%08X",
-                       position, exposureMode, exposureModeTemp, returnCode);
-    }
-
-    return returnCode;
-}
 
 T_DjiReturnCode User_CameraRunSample(void)
 {
