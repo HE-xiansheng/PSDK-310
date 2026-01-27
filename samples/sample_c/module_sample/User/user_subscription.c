@@ -49,8 +49,8 @@ extern "C"
                 } // 位置
 
                 // 显示输出
-                for (int i = 0; i < 10; i++)
-                {
+                // for (int i = 0; i < 10; i++)
+                // {
                         osalHandler->TaskSleepMs(1000 / FC_SUBSCRIPTION_TASK_FREQ);
                         djiStat = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_VELOCITY,
                                                                           (uint8_t *)&velocity,
@@ -79,7 +79,7 @@ extern "C"
                         {
                                 USER_LOG_INFO("gps position: x = %d y = %d z = %d.", gpsPosition.x, gpsPosition.y, gpsPosition.z);
                         }
-                }
+                // }
 
                 // 取消订阅
                 djiStat = DjiFcSubscription_UnSubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_VELOCITY);
