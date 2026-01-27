@@ -34,6 +34,7 @@ file(GLOB_RECURSE MODULE_SAMPLE_SRC
         ../../../module_sample/flight_controller/*.c*
         ../../../module_sample/hms_manager/*.c*
         ../../../../sample_c/module_sample/*.c
+        ../../../module_sample/User/*.c*  // 添加这行
         )
 file(GLOB_RECURSE MODULE_COMMON_SRC ../common/*.c*)
 file(GLOB_RECURSE MODULE_HAL_SRC hal/*.c*)
