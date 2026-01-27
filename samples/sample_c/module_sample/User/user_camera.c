@@ -148,3 +148,18 @@ exitCameraModule:
     DjiTest_WidgetLogAppend("User Camera sample end");
     return returnCode;
 }
+
+static uint8_t DjiTest_CameraManagerGetCameraTypeIndex(E_DjiCameraType cameraType)
+{
+    uint8_t i;
+
+    for (i = 0; i < sizeof(s_cameraTypeStrList) / sizeof(s_cameraTypeStrList[0]); i++)
+    {
+        if (s_cameraTypeStrList[i].cameraType == cameraType)
+        {
+            return i;
+        }
+    }
+
+    return 0;
+}
