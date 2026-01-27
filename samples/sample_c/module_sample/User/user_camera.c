@@ -87,9 +87,51 @@ T_DjiReturnCode User_CameraRunSample(void)
     {
     case 1:
     {
-        int isoData = 0;
-        USER_LOG_INFO("isoData:");
-        scanf("%d", &isoData);
+
+        USER_LOG_INFO("Available ISO values: ");
+        USER_LOG_INFO("0: AUTO, 1: ISO_100, 2: ISO_200, 3: ISO_400");
+        USER_LOG_INFO("4: ISO_800, 5: ISO_1600, 6: ISO_3200, 7: ISO_6400");
+        USER_LOG_INFO("8: ISO_12800, 9: ISO_25600");
+        USER_LOG_INFO("Please select ISO number: ");
+        int isoInput;
+        scanf("%d", &isoInput);
+
+        switch (isoInput)
+        {
+        case 0:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_AUTO;
+            break;
+        case 1:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_100;
+            break;
+        case 2:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_200;
+            break;
+        case 3:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_400;
+            break;
+        case 4:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_800;
+            break;
+        case 5:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_1600;
+            break;
+        case 6:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_3200;
+            break;
+        case 7:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_6400;
+            break;
+        case 8:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_12800;
+            break;
+        case 9:
+            isoDataTemp = DJI_CAMERA_MANAGER_ISO_25600;
+            break;
+        default:
+            USER_LOG_ERROR("Invalid ISO number");
+            goto exitCameraModule;
+        }
 
         // 获取ISO参数
         returnCode = DjiCameraManager_GetISO(mountPosition, &isoDataTemp);
@@ -101,20 +143,20 @@ T_DjiReturnCode User_CameraRunSample(void)
             goto exitCameraModule;
         }
         // 参数判断
-        if (isoDataTemp == isoData)
+        if (isoDataTemp == isoDataTemp)
         {
             USER_LOG_INFO("The mounted position %d camera's iso is already what you expected.",
                           mountPosition);
             return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
         }
         // 设置ISO参数
-        returnCode = DjiCameraManager_SetISO(mountPosition, isoData);
+        returnCode = DjiCameraManager_SetISO(mountPosition, isoDataTemp);
         if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
             returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
         {
             USER_LOG_ERROR("Set mounted position %d camera's iso %d failed, "
                            "error code: 0x%08X.",
-                           mountPosition, isoData, returnCode);
+                           mountPosition, isoDataTemp, returnCode);
             goto exitCameraModule;
         }
         break;
