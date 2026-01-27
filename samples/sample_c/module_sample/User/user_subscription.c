@@ -51,7 +51,7 @@ extern "C"
                 // 显示输出
                 // for (int i = 0; i < 10; i++)
                 // {
-                while(true)
+                while (true)
                 {
                         osalHandler->TaskSleepMs(1000 / FC_SUBSCRIPTION_TASK_FREQ);
                         djiStat = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_VELOCITY,
@@ -81,7 +81,7 @@ extern "C"
                         {
                                 USER_LOG_INFO("gps position: x = %d y = %d z = %d.", gpsPosition.x, gpsPosition.y, gpsPosition.z);
                         }
-                // }
+                        // }
                 }
 
                 // 取消订阅
