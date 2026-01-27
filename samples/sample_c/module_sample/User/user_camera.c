@@ -89,6 +89,7 @@ T_DjiReturnCode User_CameraRunSample(void)
     case 1:
     {
 
+        E_DjiCameraManagerISO isoData;
         USER_LOG_INFO("Available ISO values: ");
         USER_LOG_INFO("0: AUTO, 1: ISO_100, 2: ISO_200, 3: ISO_400");
         USER_LOG_INFO("4: ISO_800, 5: ISO_1600, 6: ISO_3200, 7: ISO_6400");
@@ -100,34 +101,34 @@ T_DjiReturnCode User_CameraRunSample(void)
         switch (isoInput)
         {
         case 0:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_AUTO;
+            isoData = DJI_CAMERA_MANAGER_ISO_AUTO;
             break;
         case 1:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_100;
+            isoData = DJI_CAMERA_MANAGER_ISO_100;
             break;
         case 2:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_200;
+            isoData = DJI_CAMERA_MANAGER_ISO_200;
             break;
         case 3:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_400;
+            isoData = DJI_CAMERA_MANAGER_ISO_400;
             break;
         case 4:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_800;
+            isoData = DJI_CAMERA_MANAGER_ISO_800;
             break;
         case 5:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_1600;
+            isoData = DJI_CAMERA_MANAGER_ISO_1600;
             break;
         case 6:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_3200;
+            isoData = DJI_CAMERA_MANAGER_ISO_3200;
             break;
         case 7:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_6400;
+            isoData = DJI_CAMERA_MANAGER_ISO_6400;
             break;
         case 8:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_12800;
+            isoData = DJI_CAMERA_MANAGER_ISO_12800;
             break;
         case 9:
-            isoDataTemp = DJI_CAMERA_MANAGER_ISO_25600;
+            isoData = DJI_CAMERA_MANAGER_ISO_25600;
             break;
         default:
             USER_LOG_ERROR("Invalid ISO number");
@@ -144,7 +145,7 @@ T_DjiReturnCode User_CameraRunSample(void)
             goto exitCameraModule;
         }
         // 参数判断
-        if (isoDataTemp == isoDataTemp)
+        if (isoDataTemp == isoData)
         {
             USER_LOG_INFO("The mounted position %d camera's iso is already what you expected.",
                           mountPosition);
