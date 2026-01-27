@@ -74,7 +74,7 @@ start:
         << "| [d] Stereo vision view sample - display the stereo image                                         |\n"
         << "| [e] Run camera manager sample - you can test camera's functions interactively                    |\n"
         << "| [f] Start rtk positioning sample - you can receive rtk rtcm data when rtk signal is ok           |\n"
-        << "| [g] "
+        << "| [g] Star user subscribe sample                                                                   |\n"
         << std::endl;
 
     std::cin >> inputChar;
@@ -111,6 +111,8 @@ start:
 
         USER_LOG_INFO("Start rtk positioning sample successfully");
         break;
+    case 'g':
+        User_FcSubscriptionRunSample();
     default:
         break;
     }
