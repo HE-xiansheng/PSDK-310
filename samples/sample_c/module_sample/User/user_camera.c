@@ -6,6 +6,7 @@
 #include "dji_error.h"
 #include "dji_camera_manager.h"
 
+static uint8_t DjiTest_CameraManagerGetCameraTypeIndex(E_DjiCameraType cameraType);
 typedef struct
 {
     E_DjiCameraType cameraType;
