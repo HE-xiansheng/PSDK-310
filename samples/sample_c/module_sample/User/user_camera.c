@@ -7,12 +7,15 @@
 #include "dji_camera_manager.h"
 #include "user_camera_data.h"
 #include "user_camera.h"
+#include "dji_platform.h"
 
 // 函数声明（在 test_camera_manager.c 中定义）
 T_DjiReturnCode DjiTest_CameraManagerSetExposureMode(E_DjiMountPosition position,
                                                      E_DjiCameraManagerExposureMode exposureMode);
 static uint8_t DjiTest_CameraManagerGetCameraTypeIndex(E_DjiCameraType cameraType);
 static E_DjiMountPosition s_cameraMountPosition = 0;
+static void *User_CameraCmdHandlerTask(void *arg); // 新增
+
 typedef struct
 {
     E_DjiCameraType cameraType;
@@ -143,6 +146,7 @@ T_DjiReturnCode User_CameraRunSample(void)
 
     USER_LOG_INFO("Please select mount position (1-3): ");
     scanf("%d", &mountPosition);
+
     returnCode = User_CameraStartCmdHandler();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
     {
