@@ -294,6 +294,7 @@ static T_DjiReturnCode DjiTestWidget_SetWidgetValue(E_DjiWidgetType widgetType, 
         cameraCmd->cmdType = USER_CAMERA_CMD_SHOOT_SINGLE;
         cameraCmd->hasPendingCmd = true;
     }
+        return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
 }
 
 static T_DjiReturnCode DjiTestWidget_GetWidgetValue(E_DjiWidgetType widgetType, uint32_t index, int32_t *value,
