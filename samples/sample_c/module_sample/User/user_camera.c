@@ -10,11 +10,27 @@
 T_DjiReturnCode DjiTest_CameraManagerSetExposureMode(E_DjiMountPosition position,
                                                      E_DjiCameraManagerExposureMode exposureMode);
 static uint8_t DjiTest_CameraManagerGetCameraTypeIndex(E_DjiCameraType cameraType);
+static E_DjiMountPosition s_cameraMountPosition = 0;
 typedef struct
 {
     E_DjiCameraType cameraType;
     char *cameraTypeStr;
 } T_DjiTestCameraTypeStr;
+
+typedef struct
+{
+    E_DjiMountPosition mountPosition;
+    E_DjiCameraManagerISO currentISO;
+    E_DjiCameraType cameraType;
+    uint32_t shootCount;
+    uint32_t shootInterval; // ms
+    bool isCameraInitialized;
+    bool isShooting;
+    uint32_t photosTaken;
+    char cameraTypeName[32];
+} T_UserCameraStatus; // 相机状态结构体
+
+static T_UserCameraStatus s_cameraStatus = {0}; // 相机状态
 
 /* Private values -------------------------------------------------------------*/
 static const T_DjiTestCameraTypeStr s_cameraTypeStrList[] = {
@@ -40,6 +56,92 @@ static const T_DjiTestCameraTypeStr s_cameraTypeStrList[] = {
     {DJI_CAMERA_TYPE_M4T, "M4T Camera"},
     {DJI_CAMERA_TYPE_M4E, "M4E Camera"},
 };
+
+T_DjiReturnCode User_CameraInit(E_DjiMountPosition position)
+{
+    T_DjiReturnCode returnCode;
+
+    returnCode = DjiCameraManager_Init();
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        USER_LOG_ERROR("Camera init failed, error: 0x%08X", returnCode);
+        return returnCode;
+    }
+
+    s_cameraMountPosition = position;
+    s_cameraStatus.mountPosition = position;
+    s_cameraStatus.isCameraInitialized = true;
+
+    // 获取相机类型
+    returnCode = DjiCameraManager_GetCameraType(position, &s_cameraStatus.cameraType);
+    if (returnCode == DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        uint8_t index = DjiTest_CameraManagerGetCameraTypeIndex(s_cameraStatus.cameraType);
+        strncpy(s_cameraStatus.cameraTypeName,
+                s_cameraTypeStrList[index].cameraTypeStr,
+                sizeof(s_cameraStatus.cameraTypeName) - 1);
+    }
+
+    return returnCode;
+} // 相机初始化函数
+
+T_DjiReturnCode User_CameraSetISO(E_DjiCameraManagerISO iso)
+{
+    T_DjiReturnCode returnCode;
+
+    returnCode = DjiCameraManager_SetISO(s_cameraMountPosition, iso);
+    if (returnCode == DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        s_cameraStatus.currentISO = iso;
+    }
+
+    return returnCode;
+} // 相机ISO设置函数
+
+T_DjiReturnCode User_CameraGetISO(E_DjiCameraManagerISO *iso)
+{
+    return DjiCameraManager_GetISO(s_cameraMountPosition, iso);
+} // 获取ISO
+
+T_DjiReturnCode User_CameraShootSingle(void)
+{
+    return DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
+                                            DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+} // 单次拍照
+
+T_DjiReturnCode User_CameraShootMulti(uint32_t count, uint32_t intervalMs)
+{
+    T_DjiReturnCode returnCode;
+    T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
+
+    s_cameraStatus.shootCount = count;
+    s_cameraStatus.shootInterval = intervalMs;
+
+    for (uint32_t i = 0; i < count; i++)
+    {
+        returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
+                                                      DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Photo %d/%d failed", i + 1, count);
+            return returnCode;
+        }
+
+        if (i < count - 1)
+        {
+            osalHandler->TaskSleepMs(intervalMs);
+        }
+    }
+
+    return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
+} // 多次拍照
+
+
+T_DjiReturnCode User_CameraDeInit(void)
+{
+    s_cameraStatus.isCameraInitialized = false;
+    return DjiCameraManager_DeInit();
+}
 
 T_DjiReturnCode User_CameraRunSample(void)
 {
