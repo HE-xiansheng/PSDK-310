@@ -33,6 +33,7 @@
 #include "file_binary_array_list_en.h"
 #include "../User/user_camera.h"
 #include "../User/user_subscription_data.h"
+#include "../User/user_camera_data.h"
 
 /* Private constants ---------------------------------------------------------*/
 #define WIDGET_DIR_PATH_LEN_MAX (256)
@@ -281,11 +282,18 @@ static T_DjiReturnCode DjiTestWidget_SetWidgetValue(E_DjiWidgetType widgetType, 
     USER_LOG_INFO("Widget changed: type=%s, index=%d, value=%d",
                   s_widgetTypeNameArray[widgetType], index, value);
     s_widgetValueList[index] = value;
+
     if (index == 0 && value == 1)
     {
-        USER_LOG_INFO("Button 0 pressed!");
+        USER_LOG_INFO("Button 0 pressed - Triggering camera shoot!");
+
+        // 获取相机命令结构体
+        T_UserCameraCmd *cameraCmd = User_Camera_GetCmd();
+
+        // 设置单次拍照命令
+        cameraCmd->cmdType = USER_CAMERA_CMD_SHOOT_SINGLE;
+        cameraCmd->hasPendingCmd = true;
     }
-    return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
 }
 
 static T_DjiReturnCode DjiTestWidget_GetWidgetValue(E_DjiWidgetType widgetType, uint32_t index, int32_t *value,

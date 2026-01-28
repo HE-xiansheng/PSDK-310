@@ -5,6 +5,8 @@
 #include "widget_interaction_test/test_widget_interaction.h"
 #include "dji_error.h"
 #include "dji_camera_manager.h"
+#include "user_camera_data.h"
+#include "user_camera.h"
 
 // 函数声明（在 test_camera_manager.c 中定义）
 T_DjiReturnCode DjiTest_CameraManagerSetExposureMode(E_DjiMountPosition position,
@@ -17,20 +19,8 @@ typedef struct
     char *cameraTypeStr;
 } T_DjiTestCameraTypeStr;
 
-typedef struct
-{
-    E_DjiMountPosition mountPosition;
-    E_DjiCameraManagerISO currentISO;
-    E_DjiCameraType cameraType;
-    uint32_t shootCount;
-    uint32_t shootInterval; // ms
-    bool isCameraInitialized;
-    bool isShooting;
-    uint32_t photosTaken;
-    char cameraTypeName[32];
-} T_UserCameraStatus; // 相机状态结构体
-
-static T_UserCameraStatus s_cameraStatus = {0}; // 相机状态
+static T_UserCameraCmd s_cameraCmd = {0};
+static T_UserCameraStatus s_cameraStatus = {0};
 
 /* Private values -------------------------------------------------------------*/
 static const T_DjiTestCameraTypeStr s_cameraTypeStrList[] = {
@@ -56,6 +46,36 @@ static const T_DjiTestCameraTypeStr s_cameraTypeStrList[] = {
     {DJI_CAMERA_TYPE_M4T, "M4T Camera"},
     {DJI_CAMERA_TYPE_M4E, "M4E Camera"},
 };
+
+T_UserCameraCmd *User_Camera_GetCmd(void)
+{
+    return &s_cameraCmd;
+} // 获取命令
+
+T_DjiReturnCode User_CameraShootSingle(void)
+{
+    return DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
+                                            DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+} // 单次拍照
+
+T_DjiReturnCode User_CameraSetISO(E_DjiCameraManagerISO iso)
+{
+    T_DjiReturnCode returnCode;
+
+    returnCode = DjiCameraManager_SetISO(s_cameraMountPosition, iso);
+    if (returnCode == DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        s_cameraStatus.currentISO = iso;
+    }
+
+    return returnCode;
+} // 相机ISO设置函数
+
+void User_Camera_ClearCmd(void)
+{
+    s_cameraCmd.cmdType = USER_CAMERA_CMD_NONE;
+    s_cameraCmd.hasPendingCmd = false;
+} // 清除命令
 
 T_DjiReturnCode User_CameraInit(E_DjiMountPosition position)
 {
@@ -85,62 +105,31 @@ T_DjiReturnCode User_CameraInit(E_DjiMountPosition position)
     return returnCode;
 } // 相机初始化函数
 
-T_DjiReturnCode User_CameraSetISO(E_DjiCameraManagerISO iso)
-{
-    T_DjiReturnCode returnCode;
-
-    returnCode = DjiCameraManager_SetISO(s_cameraMountPosition, iso);
-    if (returnCode == DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-    {
-        s_cameraStatus.currentISO = iso;
-    }
-
-    return returnCode;
-} // 相机ISO设置函数
-
-T_DjiReturnCode User_CameraGetISO(E_DjiCameraManagerISO *iso)
-{
-    return DjiCameraManager_GetISO(s_cameraMountPosition, iso);
-} // 获取ISO
-
-T_DjiReturnCode User_CameraShootSingle(void)
-{
-    return DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
-                                            DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
-} // 单次拍照
-
-T_DjiReturnCode User_CameraShootMulti(uint32_t count, uint32_t intervalMs)
+T_DjiReturnCode User_CameraStartCmdHandler(void)
 {
     T_DjiReturnCode returnCode;
     T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
+    static T_DjiTaskHandle s_cameraCmdThread;
 
-    s_cameraStatus.shootCount = count;
-    s_cameraStatus.shootInterval = intervalMs;
-
-    for (uint32_t i = 0; i < count; i++)
+    returnCode = User_CameraInit(DJI_MOUNT_POSITION_PAYLOAD_PORT_NO1);
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
     {
-        returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
-                                                      DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
-        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-        {
-            USER_LOG_ERROR("Photo %d/%d failed", i + 1, count);
-            return returnCode;
-        }
-
-        if (i < count - 1)
-        {
-            osalHandler->TaskSleepMs(intervalMs);
-        }
+        USER_LOG_ERROR("Camera init failed");
+        return returnCode;
     }
 
+    if (osalHandler->TaskCreate("camera_cmd_task",
+                                User_CameraCmdHandlerTask,
+                                2048,
+                                NULL,
+                                &s_cameraCmdThread) != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        USER_LOG_ERROR("Camera command task create error.");
+        return DJI_ERROR_SYSTEM_MODULE_CODE_UNKNOWN;
+    }
+
+    USER_LOG_INFO("Camera command handler started");
     return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
-} // 多次拍照
-
-
-T_DjiReturnCode User_CameraDeInit(void)
-{
-    s_cameraStatus.isCameraInitialized = false;
-    return DjiCameraManager_DeInit();
 }
 
 T_DjiReturnCode User_CameraRunSample(void)
@@ -154,7 +143,11 @@ T_DjiReturnCode User_CameraRunSample(void)
 
     USER_LOG_INFO("Please select mount position (1-3): ");
     scanf("%d", &mountPosition);
-
+    returnCode = User_CameraStartCmdHandler();
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        USER_LOG_ERROR("Start camera command handler failed, error: 0x%08X", returnCode);
+    }
     // 相机模块初始化
     returnCode = DjiCameraManager_Init();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
@@ -387,6 +380,7 @@ T_DjiReturnCode User_CameraRunSample(void)
     default:
         break;
     }
+
 // 相机模块反初始化
 exitCameraModule:
     returnCode = DjiCameraManager_DeInit();
@@ -398,6 +392,49 @@ exitCameraModule:
     USER_LOG_INFO("User Camera sample end");
     DjiTest_WidgetLogAppend("User Camera sample end");
     return returnCode;
+}
+
+static void *User_CameraCmdHandlerTask(void *arg)
+{
+    T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
+
+    USER_UTIL_UNUSED(arg);
+
+    while (1)
+    {
+        osalHandler->TaskSleepMs(50);
+
+        if (!s_cameraCmd.hasPendingCmd)
+        {
+            continue;
+        }
+
+        switch (s_cameraCmd.cmdType)
+        {
+        case USER_CAMERA_CMD_SHOOT_SINGLE:
+            USER_LOG_INFO("Camera command: Shoot single photo");
+            User_CameraShootSingle();
+            break;
+
+        case USER_CAMERA_CMD_SHOOT_MULTI:
+            USER_LOG_INFO("Camera command: Shoot %d photos with %dms interval",
+                          s_cameraCmd.cmdParam.shootMulti.count,
+                          s_cameraCmd.cmdParam.shootMulti.intervalMs);
+            User_CameraShootMulti(s_cameraCmd.cmdParam.shootMulti.count,
+                                  s_cameraCmd.cmdParam.shootMulti.intervalMs);
+            break;
+
+        case USER_CAMERA_CMD_SET_ISO:
+            USER_LOG_INFO("Camera command: Set ISO to %d",
+                          s_cameraCmd.cmdParam.setISO.isoValue);
+            User_CameraSetISO((E_DjiCameraManagerISO)s_cameraCmd.cmdParam.setISO.isoValue);
+            break;
+
+        default:
+            break;
+        }
+        User_Camera_ClearCmd();
+    }
 }
 
 static uint8_t DjiTest_CameraManagerGetCameraTypeIndex(E_DjiCameraType cameraType)
@@ -413,4 +450,42 @@ static uint8_t DjiTest_CameraManagerGetCameraTypeIndex(E_DjiCameraType cameraTyp
     }
 
     return 0;
+}
+
+T_DjiReturnCode User_CameraGetISO(E_DjiCameraManagerISO *iso)
+{
+    return DjiCameraManager_GetISO(s_cameraMountPosition, iso);
+} // 获取ISO
+
+T_DjiReturnCode User_CameraShootMulti(uint32_t count, uint32_t intervalMs)
+{
+    T_DjiReturnCode returnCode;
+    T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
+
+    s_cameraStatus.shootCount = count;
+    s_cameraStatus.shootInterval = intervalMs;
+
+    for (uint32_t i = 0; i < count; i++)
+    {
+        returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
+                                                      DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+        if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        {
+            USER_LOG_ERROR("Photo %d/%d failed", i + 1, count);
+            return returnCode;
+        }
+
+        if (i < count - 1)
+        {
+            osalHandler->TaskSleepMs(intervalMs);
+        }
+    }
+
+    return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
+} // 多次拍照
+
+T_DjiReturnCode User_CameraDeInit(void)
+{
+    s_cameraStatus.isCameraInitialized = false;
+    return DjiCameraManager_DeInit();
 }

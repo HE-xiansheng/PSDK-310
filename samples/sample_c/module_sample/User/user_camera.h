@@ -35,6 +35,7 @@ extern "C"
     T_DjiReturnCode User_CameraDeInit(void);
     /* Exported functions --------------------------------------------------------*/
     T_DjiReturnCode User_CameraRunSample(void);
+    T_DjiReturnCode User_CameraStartCmdHandler(void);
 
 #ifdef __cplusplus
 }
