@@ -32,6 +32,7 @@
 #include "dji_sdk_config.h"
 #include "file_binary_array_list_en.h"
 #include "../User/user_camera.h"
+#include "../User/user_subscription_data.h"
 
 /* Private constants ---------------------------------------------------------*/
 #define WIDGET_DIR_PATH_LEN_MAX (256)
@@ -209,21 +210,55 @@ static void *DjiTest_WidgetTask(void *arg)
 
     while (1)
     {
-        djiStat = osalHandler->GetTimeMs(&sysTimeMs);
-        if (djiStat != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-        {
-            USER_LOG_ERROR("Get system time ms error, stat = 0x%08llX", djiStat);
-        }
+        //         djiStat = osalHandler->GetTimeMs(&sysTimeMs);
+        //         if (djiStat != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        //         {
+        //             USER_LOG_ERROR("Get system time ms error, stat = 0x%08llX", djiStat);
+        //         }
 
-#ifndef USER_FIRMWARE_MAJOR_VERSION
-        snprintf(message, DJI_WIDGET_FLOATING_WINDOW_MSG_MAX_LEN, "System time : %u ms", sysTimeMs);
-#else
-        snprintf(message, DJI_WIDGET_FLOATING_WINDOW_MSG_MAX_LEN,
-                 "System time : %u ms\r\nVersion: v%02d.%02d.%02d.%02d\r\nBuild time: %s %s", sysTimeMs,
-                 USER_FIRMWARE_MAJOR_VERSION, USER_FIRMWARE_MINOR_VERSION,
-                 USER_FIRMWARE_MODIFY_VERSION, USER_FIRMWARE_DEBUG_VERSION,
-                 __DATE__, __TIME__);
-#endif
+        // #ifndef USER_FIRMWARE_MAJOR_VERSION
+        //         snprintf(message, DJI_WIDGET_FLOATING_WINDOW_MSG_MAX_LEN, "System time : %u ms", sysTimeMs);
+        // #else
+        //         snprintf(message, DJI_WIDGET_FLOATING_WINDOW_MSG_MAX_LEN,
+        //                  "System time : %u ms\r\nVersion: v%02d.%02d.%02d.%02d\r\nBuild time: %s %s", sysTimeMs,
+        //                  USER_FIRMWARE_MAJOR_VERSION, USER_FIRMWARE_MINOR_VERSION,
+        //                  USER_FIRMWARE_MODIFY_VERSION, USER_FIRMWARE_DEBUG_VERSION,
+        //                  __DATE__, __TIME__);
+        // #endif
+
+        //         djiStat = DjiWidgetFloatingWindow_ShowMessage(message);
+        //         if (djiStat != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+        //         {
+        //             USER_LOG_ERROR("Floating window show message error, stat = 0x%08llX", djiStat);
+        //         }
+
+        //         osalHandler->TaskSleepMs(1000);
+        osalHandler->GetTimeMs(&sysTimeMs);
+
+        // 获取订阅数据
+        T_UserSubscriptionData *subData = User_Subscription_GetData();
+
+        // 格式化显示消息
+        if (subData->hasVelocity)
+        {
+            snprintf(message, DJI_WIDGET_FLOATING_WINDOW_MSG_MAX_LEN,
+                     "Time: %u ms\n"
+                     "Vel: X=%.2f Y=%.2f Z=%.2f m/s\n"
+                     "Pos: X=%d Y=%d Z=%d",
+                     sysTimeMs,
+                     subData->velocity.data.x,
+                     subData->velocity.data.y,
+                     subData->velocity.data.z,
+                     subData->gpsPosition.x,
+                     subData->gpsPosition.y,
+                     subData->gpsPosition.z);
+        }
+        else
+        {
+            snprintf(message, DJI_WIDGET_FLOATING_WINDOW_MSG_MAX_LEN,
+                     "Time: %u ms\nNo subscription data",
+                     sysTimeMs);
+        }
 
         djiStat = DjiWidgetFloatingWindow_ShowMessage(message);
         if (djiStat != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
@@ -231,7 +266,7 @@ static void *DjiTest_WidgetTask(void *arg)
             USER_LOG_ERROR("Floating window show message error, stat = 0x%08llX", djiStat);
         }
 
-        osalHandler->TaskSleepMs(1000);
+        osalHandler->TaskSleepMs(1000); // 改为500ms，刷新更快
     }
 }
 

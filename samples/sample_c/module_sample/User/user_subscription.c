@@ -5,15 +5,23 @@
 #include "dji_platform.h"
 #include "widget_interaction_test/test_widget_interaction.h"
 #include "dji_error.h"
+#include "user_subscription_data.h"
 
 #define FC_SUBSCRIPTION_TASK_FREQ (1)
 
 static bool s_userFcSubscriptionDataShow = false;
+static T_UserSubscriptionData s_subscriptionData = {0};
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+        T_UserSubscriptionData *User_Subscription_GetData(void)
+        {
+                return &s_subscriptionData;
+        } // 获取数据函数
+
         T_DjiReturnCode User_FcSubscriptionRunSample(void)
         {
                 T_DjiReturnCode djiStat;
@@ -67,6 +75,10 @@ extern "C"
                                 USER_LOG_INFO("velocity: x = %f y = %f z = %f healthFlag = %d, timestamp ms = %d us = %d.", velocity.data.x,
                                               velocity.data.y,
                                               velocity.data.z, velocity.health, timestamp.millisecond, timestamp.microsecond);
+
+                                s_subscriptionData.velocity = velocity;
+                                // s_subscriptionData.velocityTimestamp = timestamp;
+                                s_subscriptionData.hasVelocity = true; // 共享数据
                         }
 
                         djiStat = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_GPS_POSITION,
@@ -80,6 +92,10 @@ extern "C"
                         else
                         {
                                 USER_LOG_INFO("gps position: x = %d y = %d z = %d.", gpsPosition.x, gpsPosition.y, gpsPosition.z);
+
+                                s_subscriptionData.gpsPosition = gpsPosition;
+                                // s_subscriptionData.positionTimestamp = timestamp;
+                                s_subscriptionData.hasPosition = true; // 共享数据
                         }
                         // }
                 }
