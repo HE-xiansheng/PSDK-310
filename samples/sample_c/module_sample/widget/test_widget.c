@@ -176,6 +176,14 @@ T_DjiReturnCode DjiTest_WidgetStartService(void)
         return DJI_ERROR_SYSTEM_MODULE_CODE_UNKNOWN;
     }
 
+    // Step 5 : Start camera command handler (Widget需要控制相机)
+    djiStat = User_CameraStartCmdHandler();
+    if (djiStat != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        USER_LOG_ERROR("Camera command handler start error, stat = 0x%08llX", djiStat);
+        return djiStat;
+    }
+
     return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
 }
 
@@ -292,7 +300,7 @@ static T_DjiReturnCode DjiTestWidget_SetWidgetValue(E_DjiWidgetType widgetType, 
 
         // 设置单次拍照命令
         cameraCmd->cmdType = USER_CAMERA_CMD_SHOOT_SINGLE;
-        cameraCmd->hasPendingCmd = true;
+        cameraCmd->hasPendingCmd =  true;
     }
 
     return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
