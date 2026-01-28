@@ -35,11 +35,11 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 // ATTENTION: User must goto https://developer.dji.com/user/apps/#all to create your own dji sdk application, get dji sdk application
 // information then fill in the application information here.
-#define USER_APP_NAME               "your_app_name"
-#define USER_APP_ID                 "your_app_id"
-#define USER_APP_KEY                "your_app_key"
-#define USER_APP_LICENSE            "your_app_license"
-#define USER_DEVELOPER_ACCOUNT      "your_developer_account"
+#define USER_APP_NAME               "TYWisdomCtrl"
+#define USER_APP_ID                 "131595"
+#define USER_APP_KEY                "bd6dbf39f4bc63e1a9486fb81763158"
+#define USER_APP_LICENSE            "vxw3hHt+zbIO/38mgmrARhh+rO4zhKDapKLHzg5KSczvh6ijgn5uZvsPv5kherUcmjO1WrAj8DtLQnJkMVWFbPNX0k4yD6c+YbDUUzjlPFSOiVNwItiLF9J5Ia0ZGsPVNrl9vp+dOw+Qc2Z55wJK2IjTugohzLedpxoxivLQp+Fv9ghDt0qqLaRzjEW5arRZmxA7ur2rzBAvwJviVidbzdB7Cnc0yl9OaMu9M3747z8dx2Yy6S7FW9DqTklCsJZbDhV0bqwiw+d2SRWWZPDvvaBhVTLPNI9uwRyPboEGnKgQ2RRVmFYmlvi1Lp3AgTYyWLrrsn1mrxZDLw/kc3hgHQ=="
+#define USER_DEVELOPER_ACCOUNT      "lurunzheng@proton.me"
 #define USER_BAUD_RATE              "460800"
 
 /* Exported types ------------------------------------------------------------*/
