@@ -7,7 +7,7 @@
 #include "dji_camera_manager.h"
 #include "user_camera_data.h"
 #include "user_camera.h"
-#include "dji_platform.h"
+#include "../utils/util_misc.h" // 添加这一行
 
 // 函数声明（在 test_camera_manager.c 中定义）
 T_DjiReturnCode DjiTest_CameraManagerSetExposureMode(E_DjiMountPosition position,
