@@ -57,8 +57,27 @@ T_UserCameraCmd *User_Camera_GetCmd(void)
 
 T_DjiReturnCode User_CameraShootSingle(void)
 {
-    return DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
-                                            DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+    T_DjiReturnCode returnCode;
+
+    // 设置曝光模式为程序自动模式（适合拍照）
+    returnCode = DjiTest_CameraManagerSetExposureMode(s_cameraMountPosition,
+                                                       DJI_CAMERA_MANAGER_EXPOSURE_MODE_PROGRAM_AUTO);
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        USER_LOG_ERROR("Set exposure mode to program auto failed, error: 0x%08X", returnCode);
+        // 继续尝试拍照，有些相机可能不需要设置曝光模式
+    }
+    else
+    {
+        USER_LOG_INFO("Exposure mode set to PROGRAM_AUTO");
+        // 等待曝光模式设置生效
+        DjiPlatform_GetOsalHandler()->TaskSleepMs(100);
+    }
+
+    // 执行拍照
+    returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
+                                                  DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+    return returnCode;
 } // 单次拍照
 
 T_DjiReturnCode User_CameraSetISO(E_DjiCameraManagerISO iso)
@@ -400,9 +419,14 @@ exitCameraModule:
 
 static void *User_CameraCmdHandlerTask(void *arg)
 {
+    T_DjiReturnCode returnCode;
     T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
 
     USER_UTIL_UNUSED(arg);
+
+    // 等待相机初始化完成
+    USER_LOG_INFO("Camera command handler task started, waiting for camera ready...");
+    osalHandler->TaskSleepMs(1000);
 
     while (1)
     {
@@ -413,31 +437,60 @@ static void *User_CameraCmdHandlerTask(void *arg)
             continue;
         }
 
+        USER_LOG_INFO("Processing camera command, type=%d", s_cameraCmd.cmdType);
+
         switch (s_cameraCmd.cmdType)
         {
         case USER_CAMERA_CMD_SHOOT_SINGLE:
             USER_LOG_INFO("Camera command: Shoot single photo");
-            User_CameraShootSingle();
+            returnCode = User_CameraShootSingle();
+            if (returnCode == DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_INFO("Photo shoot SUCCESS");
+            }
+            else
+            {
+                USER_LOG_ERROR("Photo shoot FAILED, error code: 0x%08X", returnCode);
+            }
             break;
 
         case USER_CAMERA_CMD_SHOOT_MULTI:
             USER_LOG_INFO("Camera command: Shoot %d photos with %dms interval",
                           s_cameraCmd.cmdParam.shootMulti.count,
                           s_cameraCmd.cmdParam.shootMulti.intervalMs);
-            User_CameraShootMulti(s_cameraCmd.cmdParam.shootMulti.count,
-                                  s_cameraCmd.cmdParam.shootMulti.intervalMs);
+            returnCode = User_CameraShootMulti(s_cameraCmd.cmdParam.shootMulti.count,
+                                               s_cameraCmd.cmdParam.shootMulti.intervalMs);
+            if (returnCode == DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_INFO("Multi photo shoot SUCCESS");
+            }
+            else
+            {
+                USER_LOG_ERROR("Multi photo shoot FAILED, error code: 0x%08X", returnCode);
+            }
             break;
 
         case USER_CAMERA_CMD_SET_ISO:
             USER_LOG_INFO("Camera command: Set ISO to %d",
                           s_cameraCmd.cmdParam.setISO.isoValue);
-            User_CameraSetISO((E_DjiCameraManagerISO)s_cameraCmd.cmdParam.setISO.isoValue);
+            returnCode = User_CameraSetISO((E_DjiCameraManagerISO)s_cameraCmd.cmdParam.setISO.isoValue);
+            if (returnCode == DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_INFO("ISO set SUCCESS");
+            }
+            else
+            {
+                USER_LOG_ERROR("ISO set FAILED, error code: 0x%08X", returnCode);
+            }
             break;
 
         default:
+            USER_LOG_WARN("Unknown camera command type: %d", s_cameraCmd.cmdType);
             break;
         }
+
         User_Camera_ClearCmd();
+        USER_LOG_INFO("Camera command cleared");
     }
 }
 
