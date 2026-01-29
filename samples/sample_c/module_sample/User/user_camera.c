@@ -58,33 +58,44 @@ T_UserCameraCmd *User_Camera_GetCmd(void)
 T_DjiReturnCode User_CameraShootSingle(void)
 {
     T_DjiReturnCode returnCode;
+    T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
+    E_DjiCameraManagerWorkMode workMode;
 
-    // // 设置曝光模式为程序自动模式（适合拍照）
-    // returnCode = DjiTest_CameraManagerSetExposureMode(s_cameraMountPosition,
-    //                                                   DJI_CAMERA_MANAGER_EXPOSURE_MODE_PROGRAM_AUTO);
-    // if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-    // {
-    //     USER_LOG_ERROR("Set exposure mode to program auto failed, error: 0x%08X", returnCode);
-    //     // 继续尝试拍照，有些相机可能不需要设置曝光模式
-    // }
-    // else
-    // {
-    //     USER_LOG_INFO("Exposure mode set to PROGRAM_AUTO");
-    //     // 等待曝光模式设置生效
-    //     DjiPlatform_GetOsalHandler()->TaskSleepMs(100);
-    // }
+    USER_LOG_INFO("Setting camera work mode to SHOOT_PHOTO");
 
-    USER_LOG_INFO("Mounted position %d camera start to shoot photo", s_cameraMountPosition);
-    returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+    // 1. 设置相机工作模式为拍照模式
+    returnCode = DjiCameraManager_SetMode(s_cameraMountPosition,
+                                          DJI_CAMERA_MANAGER_WORK_MODE_SHOOT_PHOTO);
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
+        returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
+    {
+        USER_LOG_ERROR("Set work mode failed, error: 0x%08X", returnCode);
+        return returnCode;
+    }
+
+    // 2. 等待模式切换
+    osalHandler->TaskSleepMs(1000);
+
+    // 3. 确认工作模式
+    returnCode = DjiCameraManager_GetMode(s_cameraMountPosition, &workMode);
+    USER_LOG_INFO("Camera work mode: %d", workMode);
+
+    // 4. 设置拍照模式为单次拍照
+    USER_LOG_INFO("Setting shoot photo mode to SINGLE");
+    returnCode = DjiCameraManager_SetShootPhotoMode(s_cameraMountPosition,
+                                                    DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
     {
-        USER_LOG_ERROR("Mounted position %d camera shoot photo failed, "
-                       "error code :0x%08X",
-                       s_cameraMountPosition, returnCode);
+        USER_LOG_ERROR("Set shoot photo mode failed, error: 0x%08X", returnCode);
+        return returnCode;
     }
-    USER_LOG_INFO("Single photo taken successfully");
-} // 单次拍照
 
+    // 5. 开始拍照
+    USER_LOG_INFO("Starting shoot photo...");
+    returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
+                                                  DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+    return returnCode;
+}
 T_DjiReturnCode User_CameraSetISO(E_DjiCameraManagerISO iso)
 {
     T_DjiReturnCode returnCode;
@@ -171,12 +182,12 @@ T_DjiReturnCode User_CameraRunSample(void)
         USER_LOG_ERROR("Init camera manager failed, error code: 0x%08X\r\n", returnCode);
         goto exitCameraModule;
     }
-    s_cameraMountPosition = mountPosition;
-    returnCode = User_CameraStartCmdHandler();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-    {
-        USER_LOG_ERROR("Start camera command handler failed, error: 0x%08X", returnCode);
-    }
+    // s_cameraMountPosition = mountPosition;
+    // returnCode = User_CameraStartCmdHandler();
+    // if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    // {
+    //     USER_LOG_ERROR("Start camera command handler failed, error: 0x%08X", returnCode);
+    // }
 
     // 版本获取
     returnCode = DjiCameraManager_GetCameraType(mountPosition, &cameraType);
