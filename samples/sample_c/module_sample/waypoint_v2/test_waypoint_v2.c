@@ -93,7 +93,7 @@ T_DjiReturnCode DjiTest_WaypointV2RunSample(void)
 {
     T_DjiReturnCode returnCode;
     uint32_t timeOutMs = 1000;
-    uint16_t missionNum = 4;                                  // 航点数
+    uint16_t missionNum = 4;                                   // 航点数
     T_DjiWaypointV2GlobalCruiseSpeed setGlobalCruiseSpeed = 0; // 设置全局航速
     T_DjiWaypointV2GlobalCruiseSpeed getGlobalCruiseSpeed = 0; // 获取当前速度
 
@@ -265,7 +265,7 @@ static T_DJIWaypointV2Action *DjiTest_WaypointV2GenerateWaypointV2Actions(uint16
 
 static void DjiTest_WaypointV2SetDefaultSetting(T_DjiWaypointV2 *waypointV2)
 {
-    waypointV2->waypointType = DJI_WAYPOINT_V2_FLIGHT_PATH_MODE_GO_TO_POINT_ALONG_CURVE_AND_STOP;
+    waypointV2->waypointType = DJI_WAYPOINT_V2_FLIGHT_PATH_MODE_GO_TO_POINT_IN_STRAIGHT_AND_STOP;
     waypointV2->headingMode = DJI_WAYPOINT_V2_HEADING_MODE_AUTO;
     waypointV2->config.useLocalMaxVel = 0;
     waypointV2->config.useLocalCruiseVel = 0;
