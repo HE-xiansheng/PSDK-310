@@ -285,6 +285,7 @@ static void *DjiTest_WidgetTask(void *arg)
 
 static T_DjiReturnCode DjiTestWidget_SetWidgetValue(E_DjiWidgetType widgetType, uint32_t index, int32_t value, void *userData)
 {
+    T_DjiReturnCode returnCode;
     USER_UTIL_UNUSED(userData);
 
     USER_LOG_INFO("Widget changed: type=%s, index=%d, value=%d",
@@ -295,12 +296,15 @@ static T_DjiReturnCode DjiTestWidget_SetWidgetValue(E_DjiWidgetType widgetType, 
     {
         USER_LOG_INFO("Button 0 pressed - Triggering camera shoot!");
 
-        // 获取相机命令结构体
-        T_UserCameraCmd *cameraCmd = User_Camera_GetCmd();
-
-        // 设置单次拍照命令
-        cameraCmd->cmdType = USER_CAMERA_CMD_SHOOT_SINGLE;
-        cameraCmd->hasPendingCmd =  true;
+             USER_LOG_INFO("Mounted position %d camera start to shoot photo", 1);
+            returnCode = DjiCameraManager_StartShootPhoto(1, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+            if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+            {
+                USER_LOG_ERROR("Mounted position %d camera shoot photo failed, "
+                               "error code :0x%08X",
+                               1, returnCode);
+            }
+            USER_LOG_INFO("Single photo taken successfully");
     }
         return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
 }
