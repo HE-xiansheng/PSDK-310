@@ -59,20 +59,20 @@ T_DjiReturnCode User_CameraShootSingle(void)
 {
     T_DjiReturnCode returnCode;
 
-    // 设置曝光模式为程序自动模式（适合拍照）
-    returnCode = DjiTest_CameraManagerSetExposureMode(s_cameraMountPosition,
-                                                      DJI_CAMERA_MANAGER_EXPOSURE_MODE_PROGRAM_AUTO);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-    {
-        USER_LOG_ERROR("Set exposure mode to program auto failed, error: 0x%08X", returnCode);
-        // 继续尝试拍照，有些相机可能不需要设置曝光模式
-    }
-    else
-    {
-        USER_LOG_INFO("Exposure mode set to PROGRAM_AUTO");
-        // 等待曝光模式设置生效
-        DjiPlatform_GetOsalHandler()->TaskSleepMs(100);
-    }
+    // // 设置曝光模式为程序自动模式（适合拍照）
+    // returnCode = DjiTest_CameraManagerSetExposureMode(s_cameraMountPosition,
+    //                                                   DJI_CAMERA_MANAGER_EXPOSURE_MODE_PROGRAM_AUTO);
+    // if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    // {
+    //     USER_LOG_ERROR("Set exposure mode to program auto failed, error: 0x%08X", returnCode);
+    //     // 继续尝试拍照，有些相机可能不需要设置曝光模式
+    // }
+    // else
+    // {
+    //     USER_LOG_INFO("Exposure mode set to PROGRAM_AUTO");
+    //     // 等待曝光模式设置生效
+    //     DjiPlatform_GetOsalHandler()->TaskSleepMs(100);
+    // }
 
     // 执行拍照
     returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
