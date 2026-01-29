@@ -84,6 +84,10 @@ static T_DjiReturnCode DjiTest_WaypointV2StateCallback(T_DjiWaypointV2MissionSta
 static T_DjiReturnCode DjiTest_WaypointV2Init(void);
 static T_DjiReturnCode DjiTest_WaypointV2DeInit(void);
 
+/*User------------------------------------------------------*/
+
+static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2_user(uint16_t waypointNum);
+
 /* Exported functions definition ---------------------------------------------*/
 T_DjiReturnCode DjiTest_WaypointV2RunSample(void)
 {
@@ -332,6 +336,78 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2(dji_f32_t ra
     return waypointV2List;
 }
 
+//********************user********************** */
+static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2_user(uint16_t waypointNum)
+{
+    T_DjiReturnCode returnCode;
+    T_DjiWaypointV2 startPoint;                           // 起始点
+    T_DjiWaypointV2 waypointV2;                           // 临时航点
+    T_DjiWaypointV2 *waypointV2List = NULL;               // 航点记录
+    T_DjiFcSubscriptionPositionFused positionFused = {0}; // 订阅数据
+    T_DjiDataTimestamp timestamp = {0};
+    uint16_t i;
+
+    // 1.分配内存
+    waypointV2List = (T_DjiWaypointV2 *)osalHandler->Malloc(waypointNum * sizeof(T_DjiWaypointV2));
+    if (waypointV2List == NULL)
+    {
+        USER_LOG_ERROR("Malloc waypoint list failed");
+        return NULL;
+    }
+
+    // 2.获取当前位置
+    osalHandler->TaskSleepMs(1000);
+    if (DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_POSITION_FUSED,
+                                                (uint8_t *)&positionFused,
+                                                sizeof(T_DjiFcSubscriptionPositionFused),
+                                                &timestamp) != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        USER_LOG_ERROR("Get GPS position failed");
+        osalHandler->Free(waypointV2List);
+        return NULL;
+    }
+
+    // 3.设置起飞点
+    startPoint.latitude = positionFused.latitude;
+    startPoint.longitude = positionFused.longitude;
+    startPoint.relativeHeight = 40;
+
+    // 4.定义4个航点(正方形)
+    DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[0]);
+    waypointV2List[0].latitude = startPoint.latitude;
+    waypointV2List[0].longitude = startPoint.longitude;
+    waypointV2List[0].relativeHeight = startPoint.relativeHeight;
+    waypointV2List[0].maxFlightSpeed = 5;
+    waypointV2List[0].autoFlightSpeed = 2;
+
+    // 航点2：向北50米
+    DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[1]);
+    waypointV2List[1].latitude = startPoint.latitude + (50.0 / TEST_EARTH_RADIUS);
+    waypointV2List[1].longitude = startPoint.longitude;
+    waypointV2List[1].relativeHeight = 40;
+    waypointV2List[1].maxFlightSpeed = 5;
+    waypointV2List[1].autoFlightSpeed = 2;
+
+    // 航点3：向东50米
+    DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[2]);
+    waypointV2List[2].latitude = startPoint.latitude + (50.0 / TEST_EARTH_RADIUS);
+    waypointV2List[2].longitude = startPoint.longitude + (50.0 / (TEST_EARTH_RADIUS * cos(startPoint.latitude)));
+    waypointV2List[2].relativeHeight = 40;
+    waypointV2List[2].maxFlightSpeed = 5;
+    waypointV2List[2].autoFlightSpeed = 2;
+
+    // 航点4：返回起点
+    DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[3]);
+    waypointV2List[3].latitude = startPoint.latitude;
+    waypointV2List[3].longitude = startPoint.longitude;
+    waypointV2List[3].relativeHeight = 40;
+    waypointV2List[3].maxFlightSpeed = 5;
+    waypointV2List[3].autoFlightSpeed = 2;
+
+    USER_LOG_INFO("Generated %d custom waypoints", waypointNum);
+    return waypointV2List;
+}
+
 uint8_t DJiTest_WaypointV2GetMissionEventIndex(uint8_t eventID)
 {
     uint8_t i;
@@ -499,7 +575,7 @@ static T_DjiReturnCode DjiTest_WaypointV2UploadMission(uint16_t missionNum)
     missionInitSettings.autoFlightSpeed = 2;
     missionInitSettings.actionWhenRcLost = DJI_WAYPOINT_V2_MISSION_KEEP_EXECUTE_WAYPOINT_V2;
     missionInitSettings.gotoFirstWaypointMode = DJI_WAYPOINT_V2_MISSION_GO_TO_FIRST_WAYPOINT_MODE_POINT_TO_POINT;
-    missionInitSettings.mission = DjiTest_WaypointV2GeneratePolygonWaypointV2(radius, polygonNum);
+    missionInitSettings.mission = DjiTest_WaypointV2GeneratePolygonWaypointV2_user(missionNum);
     missionInitSettings.missTotalLen = missionNum;
     missionInitSettings.actionList = actionList;
 
