@@ -65,7 +65,7 @@ T_DjiReturnCode User_CameraShootSingle(void)
 
     // 1. 设置相机工作模式为拍照模式
     returnCode = DjiCameraManager_SetMode(s_cameraMountPosition,
-                                          DJI_CAMERA_MANAGER_WORK_MODE_RECORD_VIDEO);
+                                          DJI_CAMERA_MANAGER_WORK_MODE_SHOOT_PHOTO);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
         returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
     {
