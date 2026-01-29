@@ -34,12 +34,14 @@
 /* Private constants ---------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
-typedef struct {
+typedef struct
+{
     uint8_t eventID;
     char *eventStr;
 } T_DjiTestWaypointV2EventStr;
 
-typedef struct {
+typedef struct
+{
     uint8_t missionState;
     char *stateStr;
 } T_DjiTestWaypointV2StateStr;
@@ -48,7 +50,7 @@ typedef struct {
 static T_DjiOsalHandler *osalHandler = NULL;
 static const dji_f32_t TEST_EARTH_RADIUS = 6378137.0;
 static uint32_t s_missionID = 12345;
-//reference note of "T_DjiWaypointV2MissionEventPush"
+// reference note of "T_DjiWaypointV2MissionEventPush"
 static const T_DjiTestWaypointV2EventStr s_waypointV2EventStr[] = {
     {.eventID = 0x01, .eventStr = "Interrupt Event"},
     {.eventID = 0x02, .eventStr = "Resume Event"},
@@ -57,10 +59,9 @@ static const T_DjiTestWaypointV2EventStr s_waypointV2EventStr[] = {
     {.eventID = 0x11, .eventStr = "Finished Event"},
     {.eventID = 0x12, .eventStr = "Avoid Obstacle Event"},
     {.eventID = 0x30, .eventStr = "Action Switch Event"},
-    {.eventID = 0xFF, .eventStr = "Unknown"}
-};
+    {.eventID = 0xFF, .eventStr = "Unknown"}};
 
-//reference note of "T_DjiWaypointV2MissionStatePush"
+// reference note of "T_DjiWaypointV2MissionStatePush"
 static const T_DjiTestWaypointV2StateStr s_waypointV2StateStr[] = {
     {.missionState = 0x00, .stateStr = "Ground station not start"},
     {.missionState = 0x01, .stateStr = "Mission prepared"},
@@ -69,8 +70,7 @@ static const T_DjiTestWaypointV2StateStr s_waypointV2StateStr[] = {
     {.missionState = 0x04, .stateStr = "Pause Mission"},
     {.missionState = 0x05, .stateStr = "Enter mission after ending pause"},
     {.missionState = 0x06, .stateStr = "Exit mission"},
-    {.missionState = 0xFF, .stateStr = "Unknown"}
-};
+    {.missionState = 0xFF, .stateStr = "Unknown"}};
 
 /* Private functions declaration ---------------------------------------------*/
 uint8_t DJiTest_WaypointV2GetMissionEventIndex(uint8_t eventID);
@@ -96,99 +96,121 @@ T_DjiReturnCode DjiTest_WaypointV2RunSample(void)
     USER_LOG_INFO("Waypoint V2 sample start");
     DjiTest_WidgetLogAppend("Waypoint V2 sample start");
 
+    // 初始化航点
     USER_LOG_INFO("--> Step 1: Init Waypoint V2 sample");
     DjiTest_WidgetLogAppend("--> Step 1: Init Waypoint V2 sample");
     returnCode = DjiTest_WaypointV2Init();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Init waypoint V2 sample failed, error code: 0x%08X", returnCode);
         USER_LOG_INFO("Waypoint V2 sample end");
         return returnCode;
     }
 
+    // 订阅GPS数据
     USER_LOG_INFO("--> Step 2: Subscribe gps fused data");
     DjiTest_WidgetLogAppend("--> Step 2: Subscribe gps fused data");
     returnCode = DjiFcSubscription_SubscribeTopic(DJI_FC_SUBSCRIPTION_TOPIC_POSITION_FUSED,
                                                   DJI_DATA_SUBSCRIPTION_TOPIC_50_HZ, NULL);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Subscribe gps fused data failed, error code: 0x%08X", returnCode);
         goto out;
     }
 
+    // 注册事件和状态回调
     USER_LOG_INFO("--> Step 3: Register waypoint V2 event and state callback\r\n");
     DjiTest_WidgetLogAppend("--> Step 3: Register waypoint V2 event and state callback\r\n");
     returnCode = DjiWaypointV2_RegisterMissionEventCallback(DjiTest_WaypointV2EventCallback);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Register waypoint V2 event failed, error code: 0x%08X", returnCode);
         goto out;
     }
     returnCode = DjiWaypointV2_RegisterMissionStateCallback(DjiTest_WaypointV2StateCallback);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Register waypoint V2 state failed, error code: 0x%08X", returnCode);
         goto out;
     }
     osalHandler->TaskSleepMs(timeOutMs);
 
+    // 上传航点任务
     USER_LOG_INFO("--> Step 4: Upload waypoint V2 mission\r\n");
     DjiTest_WidgetLogAppend("--> Step 4: Upload waypoint V2 mission\r\n");
     returnCode = DjiTest_WaypointV2UploadMission(missionNum);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Upload waypoint V2 mission failed, error code: 0x%08X", returnCode);
         goto out;
     }
     osalHandler->TaskSleepMs(timeOutMs);
 
+    // 启动航点任务
     USER_LOG_INFO("--> Step 5: Start waypoint V2 mission\r\n");
     DjiTest_WidgetLogAppend("--> Step 5: Start waypoint V2 mission\r\n");
     returnCode = DjiWaypointV2_Start();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Start waypoint V2 mission failed, error code: 0x%08X", returnCode);
         goto out;
     }
     osalHandler->TaskSleepMs(20 * timeOutMs);
 
+    // 设置全局巡航速度
     USER_LOG_INFO("--> Step 6: Set global cruise speed\r\n");
     DjiTest_WidgetLogAppend("--> Step 6: Set global cruise speed\r\n");
     setGlobalCruiseSpeed = 1.5;
     returnCode = DjiWaypointV2_SetGlobalCruiseSpeed(setGlobalCruiseSpeed);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Set global cruise speed failed, error code: 0x%08X", returnCode);
         goto out;
     }
     osalHandler->TaskSleepMs(timeOutMs);
 
+    // 获取当前速度
     USER_LOG_INFO("--> Step 7: Get global cruise speed\r\n");
     DjiTest_WidgetLogAppend("--> Step 7: Get global cruise speed\r\n");
     returnCode = DjiWaypointV2_GetGlobalCruiseSpeed(&getGlobalCruiseSpeed);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Get global cruise speed failed, error code: 0x%08X", returnCode);
         goto out;
     }
     USER_LOG_INFO("Current global cruise speed is %f m/s", getGlobalCruiseSpeed);
     osalHandler->TaskSleepMs(timeOutMs);
 
+    // 暂停任务
     USER_LOG_INFO("--> Step 8: Pause waypoint V2 for 5 s\r\n");
     DjiTest_WidgetLogAppend("--> Step 8: Pause waypoint V2 for 5 s\r\n");
     returnCode = DjiWaypointV2_Pause();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Pause waypoint V2 failed, error code: 0x%08X", returnCode);
         goto out;
     }
     osalHandler->TaskSleepMs(5 * timeOutMs);
 
+    // 恢复任务
     USER_LOG_INFO("--> Step 9: Resume waypoint V2\r\n");
     DjiTest_WidgetLogAppend("--> Step 9: Resume waypoint V2\r\n");
     returnCode = DjiWaypointV2_Resume();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Resume waypoint V2 failed, error code: 0x%08X", returnCode);
         goto out;
     }
     osalHandler->TaskSleepMs(50 * timeOutMs);
 
+    // 清理资源
+
     USER_LOG_INFO("--> Step 10: Deinit Waypoint V2 sample\r\n");
     DjiTest_WidgetLogAppend("--> Step 10: Deinit Waypoint V2 sample\r\n");
 out:
     returnCode = DjiTest_WaypointV2DeInit();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Deinit waypoint V2 sample failed, error code: 0x%08X", returnCode);
     }
 
@@ -209,11 +231,13 @@ static T_DJIWaypointV2Action *DjiTest_WaypointV2GenerateWaypointV2Actions(uint16
     T_DJIWaypointV2Action action = {0};
 
     actions = osalHandler->Malloc(actionNum * sizeof(T_DJIWaypointV2Action));
-    if (actions == NULL) {
+    if (actions == NULL)
+    {
         return NULL;
     }
 
-    for (i = 0; i < actionNum; i++) {
+    for (i = 0; i < actionNum; i++)
+    {
         sampleReachPointTriggerParam.waypointIndex = i;
         sampleReachPointTriggerParam.terminateNum = 0;
 
@@ -237,7 +261,7 @@ static T_DJIWaypointV2Action *DjiTest_WaypointV2GenerateWaypointV2Actions(uint16
 
 static void DjiTest_WaypointV2SetDefaultSetting(T_DjiWaypointV2 *waypointV2)
 {
-    waypointV2->waypointType = DJI_WAYPOINT_V2_FLIGHT_PATH_MODE_GO_TO_POINT_IN_STRAIGHT_AND_STOP;
+    waypointV2->waypointType = DJI_WAYPOINT_V2_FLIGHT_PATH_MODE_GO_TO_POINT_ALONG_CURVE_AND_STOP;
     waypointV2->headingMode = DJI_WAYPOINT_V2_HEADING_MODE_AUTO;
     waypointV2->config.useLocalMaxVel = 0;
     waypointV2->config.useLocalCruiseVel = 0;
@@ -256,7 +280,7 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2(dji_f32_t ra
 {
     // Let's create a vector to store our waypoints in.
     T_DjiReturnCode returnCode;
-    T_DjiWaypointV2 *waypointV2List = (T_DjiWaypointV2 *) osalHandler->Malloc(
+    T_DjiWaypointV2 *waypointV2List = (T_DjiWaypointV2 *)osalHandler->Malloc(
         (polygonNum + 2) * sizeof(T_DjiWaypointV2));
     T_DjiWaypointV2 startPoint;
     T_DjiWaypointV2 waypointV2;
@@ -264,13 +288,17 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2(dji_f32_t ra
     T_DjiDataTimestamp timestamp = {0};
 
     osalHandler->TaskSleepMs(1000);
+    // 获取当前位置起点
     returnCode = DjiFcSubscription_GetLatestValueOfTopic(DJI_FC_SUBSCRIPTION_TOPIC_POSITION_FUSED,
-                                                         (uint8_t *) &positionFused,
+                                                         (uint8_t *)&positionFused,
                                                          sizeof(T_DjiFcSubscriptionPositionFused),
                                                          &timestamp);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Get value of topic GPS Fused error");
-    } else {
+    }
+    else
+    {
         USER_LOG_DEBUG("Timestamp: millisecond %u microsecond %u.", timestamp.millisecond,
                        timestamp.microsecond);
         USER_LOG_DEBUG("Position: %f %f %f %d.", positionFused.latitude, positionFused.longitude,
@@ -278,6 +306,7 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2(dji_f32_t ra
                        positionFused.visibleSatelliteNumber);
     }
 
+    // 设置起飞点
     startPoint.latitude = positionFused.latitude;
     startPoint.longitude = positionFused.longitude;
     startPoint.relativeHeight = 15;
@@ -285,7 +314,9 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2(dji_f32_t ra
     waypointV2List[0] = startPoint;
 
     // Iterative algorithm
-    for (int i = 0; i < polygonNum; i++) {
+    // 生成多边形航线
+    for (int i = 0; i < polygonNum; i++)
+    {
         dji_f32_t angle = i * 2 * DJI_PI / polygonNum;
         DjiTest_WaypointV2SetDefaultSetting(&waypointV2);
         dji_f32_t X = radius * cos(angle);
@@ -305,8 +336,10 @@ uint8_t DJiTest_WaypointV2GetMissionEventIndex(uint8_t eventID)
 {
     uint8_t i;
 
-    for (i = 0; i < sizeof(s_waypointV2EventStr) / sizeof(T_DjiTestWaypointV2EventStr); i++) {
-        if (s_waypointV2EventStr[i].eventID == eventID) {
+    for (i = 0; i < sizeof(s_waypointV2EventStr) / sizeof(T_DjiTestWaypointV2EventStr); i++)
+    {
+        if (s_waypointV2EventStr[i].eventID == eventID)
+        {
             return i;
         }
     }
@@ -318,8 +351,10 @@ uint8_t DjiTest_WaypointV2GetMissionStateIndex(uint8_t state)
 {
     uint8_t i;
 
-    for (i = 0; i < sizeof(s_waypointV2StateStr) / sizeof(T_DjiTestWaypointV2StateStr); i++) {
-        if (s_waypointV2StateStr[i].missionState == state) {
+    for (i = 0; i < sizeof(s_waypointV2StateStr) / sizeof(T_DjiTestWaypointV2StateStr); i++)
+    {
+        if (s_waypointV2StateStr[i].missionState == state)
+        {
             return i;
         }
     }
@@ -329,39 +364,51 @@ uint8_t DjiTest_WaypointV2GetMissionStateIndex(uint8_t state)
 
 static T_DjiReturnCode DjiTest_WaypointV2EventCallback(T_DjiWaypointV2MissionEventPush eventData)
 {
-    if (eventData.event == 0x01) {
+    if (eventData.event == 0x01)
+    {
         USER_LOG_INFO("[%s]: Mission interrupted reason is 0x%x",
                       s_waypointV2EventStr[DJiTest_WaypointV2GetMissionEventIndex(eventData.event)].eventStr,
                       eventData.data.interruptReason);
-    } else if (eventData.event == 0x02) {
+    }
+    else if (eventData.event == 0x02)
+    {
         USER_LOG_INFO("[%s]: Mission recover reason is 0x%x",
                       s_waypointV2EventStr[DJiTest_WaypointV2GetMissionEventIndex(eventData.event)].eventStr,
                       eventData.data.recoverProcess);
-    } else if (eventData.event == 0x03) {
+    }
+    else if (eventData.event == 0x03)
+    {
         USER_LOG_INFO("[%s]: Mission exit reason is 0x%x",
                       s_waypointV2EventStr[DJiTest_WaypointV2GetMissionEventIndex(eventData.event)].eventStr,
                       eventData.data.exitReason);
-    } else if (eventData.event == 0x10) {
+    }
+    else if (eventData.event == 0x10)
+    {
         USER_LOG_INFO("[%s]: Current waypoint index is %d",
                       s_waypointV2EventStr[DJiTest_WaypointV2GetMissionEventIndex(eventData.event)].eventStr,
                       eventData.data.waypointIndex);
-    } else if (eventData.event == 0x11) {
+    }
+    else if (eventData.event == 0x11)
+    {
         USER_LOG_INFO("[%s]: Current mission execute times is %d",
                       s_waypointV2EventStr[DJiTest_WaypointV2GetMissionEventIndex(eventData.event)].eventStr,
                       eventData.data.T_DjiWaypointV2MissionExecEvent.currentMissionExecTimes);
-    } else if (eventData.event == 0x12) {
+    }
+    else if (eventData.event == 0x12)
+    {
         USER_LOG_INFO("[%s]: avoid obstacle state:%d",
                       s_waypointV2EventStr[DJiTest_WaypointV2GetMissionEventIndex(eventData.event)].eventStr,
                       eventData.data.avoidState);
-    } else if (eventData.event == 0x30) {
+    }
+    else if (eventData.event == 0x30)
+    {
         USER_LOG_INFO(
             "[%s]: action id:%d, pre actuator state:%d, current actuator state:%d, result:0x%08llX",
             s_waypointV2EventStr[DJiTest_WaypointV2GetMissionEventIndex(eventData.event)].eventStr,
             eventData.data.T_DjiWaypointV2ActionExecEvent.actionId,
             eventData.data.T_DjiWaypointV2ActionExecEvent.preActuatorState,
             eventData.data.T_DjiWaypointV2ActionExecEvent.curActuatorState,
-            eventData.data.T_DjiWaypointV2ActionExecEvent.result
-        );
+            eventData.data.T_DjiWaypointV2ActionExecEvent.result);
     }
 
     return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
@@ -372,12 +419,13 @@ static T_DjiReturnCode DjiTest_WaypointV2StateCallback(T_DjiWaypointV2MissionSta
     static uint32_t curMs = 0;
     static uint32_t preMs = 0;
     osalHandler->GetTimeMs(&curMs);
-    if (curMs - preMs >= 1000) {
+    if (curMs - preMs >= 1000)
+    {
         preMs = curMs;
         USER_LOG_INFO("[Waypoint Index:%d]: State: %s, velocity:%.2f m/s",
                       stateData.curWaypointIndex,
                       s_waypointV2StateStr[DjiTest_WaypointV2GetMissionStateIndex(stateData.state)].stateStr,
-                      (dji_f32_t) stateData.velocity / 100);
+                      (dji_f32_t)stateData.velocity / 100);
     }
 
     return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
@@ -388,22 +436,24 @@ static T_DjiReturnCode DjiTest_WaypointV2Init(void)
     T_DjiReturnCode returnCode;
 
     osalHandler = DjiPlatform_GetOsalHandler();
-    if (!osalHandler) return DJI_ERROR_SYSTEM_MODULE_CODE_UNKNOWN;
+    if (!osalHandler)
+        return DJI_ERROR_SYSTEM_MODULE_CODE_UNKNOWN;
 
     returnCode = DjiFcSubscription_Init();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Init waypoint V2 data subscription module error, stat:0x%08llX", returnCode);
         return returnCode;
     }
 
     returnCode = DjiWaypointV2_Init();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Init waypoint V2 module error, stat:0x%08llX", returnCode);
         return returnCode;
     }
 
     return DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS;
-
 }
 
 static T_DjiReturnCode DjiTest_WaypointV2DeInit(void)
@@ -411,13 +461,15 @@ static T_DjiReturnCode DjiTest_WaypointV2DeInit(void)
     T_DjiReturnCode returnCode;
 
     returnCode = DjiFcSubscription_DeInit();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Deinit waypoint V2 data subscription module error, stat:0x%08llX", returnCode);
         return returnCode;
     }
 
     returnCode = DjiWaypointV2_Deinit();
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Deinit waypoint V2 module error, stat:0x%08llX", returnCode);
         return returnCode;
     }
@@ -452,7 +504,8 @@ static T_DjiReturnCode DjiTest_WaypointV2UploadMission(uint16_t missionNum)
     missionInitSettings.actionList = actionList;
 
     returnCode = DjiWaypointV2_UploadMission(&missionInitSettings);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS) {
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
         USER_LOG_ERROR("Init waypoint V2 mission setting failed, ErrorCode:0x%lX", returnCode);
         goto out;
     }
