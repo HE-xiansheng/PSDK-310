@@ -448,7 +448,7 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2_user(uint16_
     startPoint.longitude = positionFused.longitude;
     startPoint.relativeHeight = 20;
 
-    // 4.定义4个航点(正方形)
+    // 4.定义4个航点(三角形)
     DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[0]);
     waypointV2List[0].latitude = startPoint.latitude;
     waypointV2List[0].longitude = startPoint.longitude;
