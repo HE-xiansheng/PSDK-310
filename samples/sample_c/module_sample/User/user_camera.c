@@ -74,10 +74,15 @@ T_DjiReturnCode User_CameraShootSingle(void)
     //     DjiPlatform_GetOsalHandler()->TaskSleepMs(100);
     // }
 
-    // 执行拍照
-    returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition,
-                                                  DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
-    return returnCode;
+    USER_LOG_INFO("Mounted position %d camera start to shoot photo", s_cameraMountPosition);
+    returnCode = DjiCameraManager_StartShootPhoto(s_cameraMountPosition, DJI_CAMERA_MANAGER_SHOOT_PHOTO_MODE_SINGLE);
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        USER_LOG_ERROR("Mounted position %d camera shoot photo failed, "
+                       "error code :0x%08X",
+                       s_cameraMountPosition, returnCode);
+    }
+    USER_LOG_INFO("Single photo taken successfully");
 } // 单次拍照
 
 T_DjiReturnCode User_CameraSetISO(E_DjiCameraManagerISO iso)
