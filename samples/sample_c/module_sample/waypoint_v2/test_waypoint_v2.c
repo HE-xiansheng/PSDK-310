@@ -93,7 +93,7 @@ T_DjiReturnCode DjiTest_WaypointV2RunSample(void)
 {
     T_DjiReturnCode returnCode;
     uint32_t timeOutMs = 1000;
-    uint16_t missionNum = 10;                                  // 航点数
+    uint16_t missionNum = 4;                                  // 航点数
     T_DjiWaypointV2GlobalCruiseSpeed setGlobalCruiseSpeed = 0; // 设置全局航速
     T_DjiWaypointV2GlobalCruiseSpeed getGlobalCruiseSpeed = 0; // 获取当前速度
 
@@ -370,9 +370,9 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2_user(uint16_
     // 3.设置起飞点
     startPoint.latitude = positionFused.latitude;
     startPoint.longitude = positionFused.longitude;
-    startPoint.relativeHeight = 40;
+    startPoint.relativeHeight = 20;
 
-    // 4.定义4个航点(正方形)
+    // 4.定义4个航点(三角形)
     DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[0]);
     waypointV2List[0].latitude = startPoint.latitude;
     waypointV2List[0].longitude = startPoint.longitude;
@@ -382,17 +382,17 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2_user(uint16_
 
     // 航点2：向北50米
     DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[1]);
-    waypointV2List[1].latitude = startPoint.latitude + (50.0 / TEST_EARTH_RADIUS);
+    waypointV2List[1].latitude = startPoint.latitude + (5.0 / TEST_EARTH_RADIUS);
     waypointV2List[1].longitude = startPoint.longitude;
-    waypointV2List[1].relativeHeight = 40;
+    waypointV2List[1].relativeHeight = 20;
     waypointV2List[1].maxFlightSpeed = 5;
     waypointV2List[1].autoFlightSpeed = 2;
 
     // 航点3：向东50米
     DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[2]);
-    waypointV2List[2].latitude = startPoint.latitude + (50.0 / TEST_EARTH_RADIUS);
-    waypointV2List[2].longitude = startPoint.longitude + (50.0 / (TEST_EARTH_RADIUS * cos(startPoint.latitude)));
-    waypointV2List[2].relativeHeight = 40;
+    waypointV2List[2].latitude = startPoint.latitude + (5.0 / TEST_EARTH_RADIUS);
+    waypointV2List[2].longitude = startPoint.longitude + (5.0 / (TEST_EARTH_RADIUS * cos(startPoint.latitude)));
+    waypointV2List[2].relativeHeight = 20;
     waypointV2List[2].maxFlightSpeed = 5;
     waypointV2List[2].autoFlightSpeed = 2;
 
@@ -400,7 +400,7 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2_user(uint16_
     DjiTest_WaypointV2SetDefaultSetting(&waypointV2List[3]);
     waypointV2List[3].latitude = startPoint.latitude;
     waypointV2List[3].longitude = startPoint.longitude;
-    waypointV2List[3].relativeHeight = 40;
+    waypointV2List[3].relativeHeight = 20;
     waypointV2List[3].maxFlightSpeed = 5;
     waypointV2List[3].autoFlightSpeed = 2;
 
