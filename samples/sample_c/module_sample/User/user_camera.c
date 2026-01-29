@@ -190,7 +190,7 @@ T_DjiReturnCode User_CameraRunSample(void)
         USER_LOG_ERROR("Start camera command handler failed, error: 0x%08X", returnCode);
     }
 
-    // 版本获取
+    //版本获取
     returnCode = DjiCameraManager_GetCameraType(mountPosition, &cameraType);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
     {
