@@ -61,7 +61,7 @@ T_DjiReturnCode User_CameraShootSingle(void)
 
     // 设置曝光模式为程序自动模式（适合拍照）
     returnCode = DjiTest_CameraManagerSetExposureMode(s_cameraMountPosition,
-                                                       DJI_CAMERA_MANAGER_EXPOSURE_MODE_PROGRAM_AUTO);
+                                                      DJI_CAMERA_MANAGER_EXPOSURE_MODE_PROGRAM_AUTO);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
     {
         USER_LOG_ERROR("Set exposure mode to program auto failed, error: 0x%08X", returnCode);
@@ -133,13 +133,6 @@ T_DjiReturnCode User_CameraStartCmdHandler(void)
     T_DjiOsalHandler *osalHandler = DjiPlatform_GetOsalHandler();
     static T_DjiTaskHandle s_cameraCmdThread;
 
-    returnCode = User_CameraInit(DJI_MOUNT_POSITION_PAYLOAD_PORT_NO1);
-    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-    {
-        USER_LOG_ERROR("Camera init failed");
-        return returnCode;
-    }
-
     if (osalHandler->TaskCreate("camera_cmd_task",
                                 User_CameraCmdHandlerTask,
                                 2048,
@@ -166,18 +159,19 @@ T_DjiReturnCode User_CameraRunSample(void)
     USER_LOG_INFO("Please select mount position (1-3): ");
     scanf("%d", &mountPosition);
 
+    // 相机模块初始化
+    returnCode = DjiCameraManager_Init();
+    if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
+    {
+        USER_LOG_ERROR("Init camera manager failed, error code: 0x%08X\r\n", returnCode);
+        goto exitCameraModule;
+    }
+
     returnCode = User_CameraStartCmdHandler();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
     {
         USER_LOG_ERROR("Start camera command handler failed, error: 0x%08X", returnCode);
     }
-    //相机模块初始化
-    // returnCode = DjiCameraManager_Init();
-    // if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
-    // {
-    //     USER_LOG_ERROR("Init camera manager failed, error code: 0x%08X\r\n", returnCode);
-    //     goto exitCameraModule;
-    // }
 
     // 版本获取
     returnCode = DjiCameraManager_GetCameraType(mountPosition, &cameraType);
