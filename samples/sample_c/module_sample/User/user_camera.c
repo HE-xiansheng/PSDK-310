@@ -166,7 +166,7 @@ T_DjiReturnCode User_CameraRunSample(void)
         USER_LOG_ERROR("Init camera manager failed, error code: 0x%08X\r\n", returnCode);
         goto exitCameraModule;
     }
-
+    s_cameraMountPosition = mountPosition;
     returnCode = User_CameraStartCmdHandler();
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
     {
