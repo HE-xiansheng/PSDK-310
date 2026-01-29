@@ -65,7 +65,7 @@ T_DjiReturnCode User_CameraShootSingle(void)
 
     // 1. 设置相机工作模式为拍照模式
     returnCode = DjiCameraManager_SetMode(s_cameraMountPosition,
-                                          DJI_CAMERA_MANAGER_WORK_MODE_SHOOT_PHOTO);
+                                          1);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS &&
         returnCode != DJI_ERROR_CAMERA_MANAGER_MODULE_CODE_UNSUPPORTED_COMMAND)
     {
@@ -190,7 +190,7 @@ T_DjiReturnCode User_CameraRunSample(void)
         USER_LOG_ERROR("Start camera command handler failed, error: 0x%08X", returnCode);
     }
 
-    //版本获取
+    // 版本获取
     returnCode = DjiCameraManager_GetCameraType(mountPosition, &cameraType);
     if (returnCode != DJI_ERROR_SYSTEM_MODULE_CODE_SUCCESS)
     {
