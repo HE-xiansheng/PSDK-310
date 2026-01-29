@@ -89,9 +89,9 @@ T_DjiReturnCode DjiTest_WaypointV2RunSample(void)
 {
     T_DjiReturnCode returnCode;
     uint32_t timeOutMs = 1000;
-    uint16_t missionNum = 8;
-    T_DjiWaypointV2GlobalCruiseSpeed setGlobalCruiseSpeed = 0;
-    T_DjiWaypointV2GlobalCruiseSpeed getGlobalCruiseSpeed = 0;
+    uint16_t missionNum = 10;                                  // 航点数
+    T_DjiWaypointV2GlobalCruiseSpeed setGlobalCruiseSpeed = 0; // 设置全局航速
+    T_DjiWaypointV2GlobalCruiseSpeed getGlobalCruiseSpeed = 0; // 获取当前速度
 
     USER_LOG_INFO("Waypoint V2 sample start");
     DjiTest_WidgetLogAppend("Waypoint V2 sample start");
@@ -272,8 +272,8 @@ static void DjiTest_WaypointV2SetDefaultSetting(T_DjiWaypointV2 *waypointV2)
     waypointV2->pointOfInterest.positionX = 0;
     waypointV2->pointOfInterest.positionY = 0;
     waypointV2->pointOfInterest.positionZ = 0;
-    waypointV2->maxFlightSpeed = 9;
-    waypointV2->autoFlightSpeed = 2;
+    waypointV2->maxFlightSpeed = 20;
+    waypointV2->autoFlightSpeed = 5;
 }
 
 static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2(dji_f32_t radius, uint16_t polygonNum)
@@ -309,7 +309,7 @@ static T_DjiWaypointV2 *DjiTest_WaypointV2GeneratePolygonWaypointV2(dji_f32_t ra
     // 设置起飞点
     startPoint.latitude = positionFused.latitude;
     startPoint.longitude = positionFused.longitude;
-    startPoint.relativeHeight = 15;
+    startPoint.relativeHeight = 40;
     DjiTest_WaypointV2SetDefaultSetting(&startPoint);
     waypointV2List[0] = startPoint;
 
