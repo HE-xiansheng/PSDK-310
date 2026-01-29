@@ -225,12 +225,50 @@ out:
 }
 
 /* Private functions definition-----------------------------------------------*/
+// static T_DJIWaypointV2Action *DjiTest_WaypointV2GenerateWaypointV2Actions(uint16_t actionNum)
+// {
+//     T_DJIWaypointV2Action *actions = NULL;
+//     uint16_t i;
+//     T_DJIWaypointV2Trigger trigger = {0};
+//     T_DJIWaypointV2SampleReachPointTriggerParam sampleReachPointTriggerParam = {0};
+//     T_DJIWaypointV2Actuator actuator = {0};
+//     T_DJIWaypointV2Action action = {0};
+
+//     actions = osalHandler->Malloc(actionNum * sizeof(T_DJIWaypointV2Action));
+//     if (actions == NULL)
+//     {
+//         return NULL;
+//     }
+
+//     for (i = 0; i < actionNum; i++)
+//     {
+//         sampleReachPointTriggerParam.waypointIndex = i;
+//         sampleReachPointTriggerParam.terminateNum = 0;
+
+//         trigger.actionTriggerType = DJI_WAYPOINT_V2_ACTION_TRIGGER_TYPE_SAMPLE_REACH_POINT;
+//         trigger.sampleReachPointTriggerParam.terminateNum = sampleReachPointTriggerParam.terminateNum;
+//         trigger.sampleReachPointTriggerParam.waypointIndex = sampleReachPointTriggerParam.waypointIndex;
+
+//         actuator.actuatorType = DJI_WAYPOINT_V2_ACTION_ACTUATOR_TYPE_CAMERA;
+//         actuator.actuatorIndex = 0;
+//         actuator.cameraActuatorParam.operationType = DJI_WAYPOINT_V2_ACTION_ACTUATOR_CAMERA_OPERATION_TYPE_TAKE_PHOTO;
+
+//         action.actionId = i;
+//         memcpy(&action.actuator, &actuator, sizeof(actuator));
+//         memcpy(&action.trigger, &trigger, sizeof(trigger));
+
+//         actions[i] = action;
+//     }
+
+//     return actions;
+// }
+
+/* User----------------------------------------------------------------*/
 static T_DJIWaypointV2Action *DjiTest_WaypointV2GenerateWaypointV2Actions(uint16_t actionNum)
 {
     T_DJIWaypointV2Action *actions = NULL;
     uint16_t i;
     T_DJIWaypointV2Trigger trigger = {0};
-    T_DJIWaypointV2SampleReachPointTriggerParam sampleReachPointTriggerParam = {0};
     T_DJIWaypointV2Actuator actuator = {0};
     T_DJIWaypointV2Action action = {0};
 
@@ -242,22 +280,60 @@ static T_DJIWaypointV2Action *DjiTest_WaypointV2GenerateWaypointV2Actions(uint16
 
     for (i = 0; i < actionNum; i++)
     {
-        sampleReachPointTriggerParam.waypointIndex = i;
-        sampleReachPointTriggerParam.terminateNum = 0;
+        if (i % 2 == 0)
+        {
+            // === 动作1：云台向下看 ===
+            action.actionId = i;
 
-        trigger.actionTriggerType = DJI_WAYPOINT_V2_ACTION_TRIGGER_TYPE_SAMPLE_REACH_POINT;
-        trigger.sampleReachPointTriggerParam.terminateNum = sampleReachPointTriggerParam.terminateNum;
-        trigger.sampleReachPointTriggerParam.waypointIndex = sampleReachPointTriggerParam.waypointIndex;
+            // 触发器：到达第 i/2 个航点
+            trigger.actionTriggerType = DJI_WAYPOINT_V2_ACTION_TRIGGER_TYPE_SAMPLE_REACH_POINT;
+            trigger.sampleReachPointTriggerParam.waypointIndex = i / 2;
+            trigger.sampleReachPointTriggerParam.terminateNum = 0;
 
-        actuator.actuatorType = DJI_WAYPOINT_V2_ACTION_ACTUATOR_TYPE_CAMERA;
-        actuator.actuatorIndex = 0;
-        actuator.cameraActuatorParam.operationType = DJI_WAYPOINT_V2_ACTION_ACTUATOR_CAMERA_OPERATION_TYPE_TAKE_PHOTO;
+            // 执行器：云台向下45度
+            actuator.actuatorType = DJI_WAYPOINT_V2_ACTION_ACTUATOR_TYPE_GIMBAL;
+            actuator.actuatorIndex = 0;
+            actuator.gimbalActuatorParam.operationType =
+                DJI_WAYPOINT_V2_ACTION_ACTUATOR_GIMBAL_OPERATION_TYPE_ROTATE_GIMBAL;
 
-        action.actionId = i;
-        memcpy(&action.actuator, &actuator, sizeof(actuator));
-        memcpy(&action.trigger, &trigger, sizeof(trigger));
+            actuator.gimbalActuatorParam.rotation.x = 0;
+            actuator.gimbalActuatorParam.rotation.y = -450; // 向下45度（-45 × 10）
+            actuator.gimbalActuatorParam.rotation.z = 0;
+            actuator.gimbalActuatorParam.rotation.ctrl_mode = 0;
+            actuator.gimbalActuatorParam.rotation.rollCmdIgnore = 0;
+            actuator.gimbalActuatorParam.rotation.pitchCmdIgnore = 0;
+            actuator.gimbalActuatorParam.rotation.yawCmdIgnore = 0;
+            actuator.gimbalActuatorParam.rotation.absYawModeRef = 0;
+            actuator.gimbalActuatorParam.rotation.durationTime = 10; // 1秒
 
-        actions[i] = action;
+            memcpy(&action.actuator, &actuator, sizeof(actuator));
+            memcpy(&action.trigger, &trigger, sizeof(trigger));
+            actions[i] = action;
+        }
+        else
+        {
+            // === 动作2：拍照 ===
+            action.actionId = i;
+
+            // 触发器：关联到前一个云台动作
+            trigger.actionTriggerType = DJI_WAYPOINT_V2_ACTION_TRIGGER_ACTION_ASSOCIATED;
+
+            trigger.associateTriggerParam.actionAssociatedType =
+                DJI_WAYPOINT_V2_TRIGGER_ASSOCIATED_TIMING_TYPE_AFTER_FINISHED; // 云台动作完成后
+            trigger.associateTriggerParam.waitTimeUint = 0;                    // 单位：0=秒，1=毫秒
+            trigger.associateTriggerParam.waitingTime = 1;                     // 等待1秒后
+            trigger.associateTriggerParam.actionIdAssociated = i - 1;          // 关联到前一个动作（云台）
+
+            // 执行器：拍照
+            actuator.actuatorType = DJI_WAYPOINT_V2_ACTION_ACTUATOR_TYPE_CAMERA;
+            actuator.actuatorIndex = 0;
+            actuator.cameraActuatorParam.operationType =
+                DJI_WAYPOINT_V2_ACTION_ACTUATOR_CAMERA_OPERATION_TYPE_TAKE_PHOTO;
+
+            memcpy(&action.actuator, &actuator, sizeof(actuator));
+            memcpy(&action.trigger, &trigger, sizeof(trigger));
+            actions[i] = action;
+        }
     }
 
     return actions;
@@ -558,7 +634,7 @@ static T_DjiReturnCode DjiTest_WaypointV2UploadMission(uint16_t missionNum)
     T_DjiReturnCode returnCode;
     uint16_t polygonNum = missionNum - 2;
     dji_f32_t radius = 6;
-    uint16_t actionNum = 5;
+    uint16_t actionNum = missionNum * 2;
     T_DjiWayPointV2MissionSettings missionInitSettings = {0};
     T_DJIWaypointV2ActionList actionList = {NULL, 0};
 
